@@ -1,7 +1,8 @@
 import pandas as pd
-from colorama import Fore, Style, init
+from colorama import init, Fore, Style
 
 init()
+
 
 def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -10,9 +11,7 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
 
     - Drop unnecessary columns
     - Rename columns for consistency
-    # to do
     - Reorder columns to match the desired output
-    # to do
 
     Parameters:
     df (pd.DataFrame): The input DataFrame to be transformed.
@@ -82,8 +81,18 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
         ]
     )
 
-    print(f"Number of columns before dropping: {input_columns_len}")
-    print(f"Number of columns after dropping: {len(df.columns)}")
+    print(
+        "Number of columns before dropping: "
+        + Fore.RED
+        + str(input_columns_len)
+        + Style.RESET_ALL
+    )
+    print(
+        "Number of columns after dropping: "
+        + Fore.RED
+        + str(len(df.columns))
+        + Style.RESET_ALL
+    )
 
     # Rename columns for consistency
     columns_to_rename = {
@@ -111,7 +120,13 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
 
     df = df.rename(columns=columns_to_rename)
 
-    print(f"Number of renamed columns: {len(columns_to_rename)}")
+    print(
+        "Number of renamed columns: "
+        + Fore.RED
+        + str(len(columns_to_rename))
+        + Style.RESET_ALL
+    )
+    print("Transforming DataFrame...")
 
     # Reorder columns to match the desired output
     df = df[
@@ -132,6 +147,7 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
             "lymphoma",
             "solid_tumor_with_metastasis",
             # Other information of the patient (x)
+            "arf",
             "elective_surgery",
             # Vital signs (x)
             "albumin",
@@ -139,7 +155,6 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
             "h1_albumin_max",
             "d1_albumin_min",
             "d1_albumin_max",
-            "arf",
             "bilirubin",
             "h1_bilirubin_min",
             "h1_bilirubin_max",
@@ -168,6 +183,11 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
             "h1_hco3_max",
             "d1_hco3_min",
             "d1_hco3_max",
+            "heart_rate",
+            "h1_heartrate_min",
+            "h1_heartrate_max",
+            "d1_heartrate_min",
+            "d1_heartrate_max",
             "h1_hemaglobin_min",
             "h1_hemaglobin_max",
             "d1_hemaglobin_min",
@@ -185,6 +205,16 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
             "h1_lactate_max",
             "d1_lactate_min",
             "d1_lactate_max",
+            "map",
+            "h1_mbp_min",
+            "h1_mbp_max",
+            "d1_mbp_min",
+            "d1_mbp_max",
+            "ph",
+            "h1_arterial_ph_min",
+            "h1_arterial_ph_max",
+            "d1_arterial_ph_min",
+            "d1_arterial_ph_max",
             "h1_platelets_min",
             "h1_platelets_max",
             "d1_platelets_min",
@@ -198,6 +228,10 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
             "h1_sodium_max",
             "d1_sodium_min",
             "d1_sodium_max",
+            "h1_spo2_min",
+            "h1_spo2_max",
+            "d1_spo2_min",
+            "d1_spo2_max",
             "temp",
             "h1_temp_min",
             "h1_temp_max",
@@ -208,56 +242,34 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
             "h1_wbc_max",
             "d1_wbc_min",
             "d1_wbc_max",
-
-            "fio2",
-            "map",
-            "paco2",
-            "paco2_for_ph",
-            "pao2",
-            "ph",
-            "urineoutput",
-
-            "h1_diasbp_min",
-            "h1_diasbp_max",
-            "d1_diasbp_min",
-            "d1_diasbp_max",
-            "heart_rate",
-            "h1_heartrate_min",
-            "h1_heartrate_max",
-            "d1_heartrate_min",
-            "d1_heartrate_max",
-            "h1_mbp_min",
-            "h1_mbp_max",
-            "d1_mbp_min",
-            "d1_mbp_max",
-            "h1_spo2_min",
-            "h1_spo2_max",
-            "d1_spo2_min",
-            "d1_spo2_max",
-            "h1_sysbp_min",
-            "h1_sysbp_max",
-            "d1_sysbp_min",
-            "d1_sysbp_max",
+            # Other signs (x)
             "h1_arterial_pco2_min",
             "h1_arterial_pco2_max",
             "d1_arterial_pco2_min",
             "d1_arterial_pco2_max",
-            "h1_arterial_ph_min",
-            "h1_arterial_ph_max",
-            "d1_arterial_ph_min",
-            "d1_arterial_ph_max",
             "h1_arterial_po2_min",
             "h1_arterial_po2_max",
             "d1_arterial_po2_min",
             "d1_arterial_po2_max",
+            "h1_diasbp_min",
+            "h1_diasbp_max",
+            "d1_diasbp_min",
+            "d1_diasbp_max",
+            "fio2",
+            "pao2",
             "h1_pao2fio2ratio_min",
             "h1_pao2fio2ratio_max",
             "d1_pao2fio2ratio_min",
             "d1_pao2fio2ratio_max",
+            "h1_sysbp_min",
+            "h1_sysbp_max",
+            "d1_sysbp_min",
+            "d1_sysbp_max",
+            "urineoutput",
         ]
     ]
 
-    print("Done transforming DataFrame")
+    print(Fore.GREEN + "Done" + Style.RESET_ALL)
 
     return df
 
