@@ -25,7 +25,9 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
     input_rows_len = len(df)
 
     # Calculate missing values depending on other columns
-    print("Calculate missing values depending on other columns...")
+    print(
+        "\nTransforming DataFrame - Calculate missing values depending on other columns..."
+    )
 
     # If bmi is missing, calculate it using the formula: weight / (height / 100) ** 2
     df["bmi"] = df.apply(
@@ -40,6 +42,7 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # Drop unnecessary columns
+    print("Transforming DataFrame - Drop unnecessary columns...")
     print(
         "Number of columns before dropping: "
         + Fore.RED
@@ -115,6 +118,7 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # Drop rows with missing values in key columns
+    print("Transforming DataFrame - Drop rows with missing values in key columns...")
     print(
         "Number of rows before dropping: "
         + Fore.RED
@@ -322,6 +326,7 @@ def silver_to_gold(df: pd.DataFrame) -> pd.DataFrame:
     """
 
     # Fill missing values in specific columns
+    print("Transforming DataFrame - Fill missing values in specific columns...")
     # With 0
     columns_to_fill = [
         "aids",
