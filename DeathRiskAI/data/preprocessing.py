@@ -30,6 +30,7 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # If bmi is missing, calculate it using the formula: weight / (height / 100) ** 2
+    print("Calculate BMI if missing...")
     df["bmi"] = df.apply(
         lambda row: (
             row["weight"] / ((row["height"] / 100) ** 2)
@@ -316,7 +317,7 @@ def silver_to_gold(df: pd.DataFrame) -> pd.DataFrame:
     This function takes a DataFrame and performs the following transformations:
 
     - Fill missing values in specific columns
-    - Normalize numerical columns
+    - Normalize floating-point numerical columns
     - Encode categorical columns
 
     Parameters:
@@ -327,7 +328,9 @@ def silver_to_gold(df: pd.DataFrame) -> pd.DataFrame:
 
     # Fill missing values in specific columns
     print("Transforming DataFrame - Fill missing values in specific columns...")
+
     # With 0
+    print("Filling missing values with 0...")
     columns_to_fill = [
         "aids",
         "cirrhosis",
@@ -343,6 +346,7 @@ def silver_to_gold(df: pd.DataFrame) -> pd.DataFrame:
     df[columns_to_fill] = df[columns_to_fill].fillna(0)
 
     # With mean
+    print("Filling missing values with mean of top 10 values...")
     columns_to_fill_mean = [
         "albumin",
         "h1_albumin_min",
@@ -467,18 +471,22 @@ def silver_to_gold(df: pd.DataFrame) -> pd.DataFrame:
             mean_top_10 = round(top_10_values.mean(), 2)
             df[column] = df[column].fillna(mean_top_10)
 
-    # Normalize numerical columns
-    # Round numerical columns to 2 decimal places
+    # Normalize floating-point numerical columns
+    # Round floating-point numerical columns to 2 decimal places
+    print("Transforming DataFrame - Normalize floating-point numerical columns...")
     float_columns = df.select_dtypes(include=["float64"]).columns
     for column in float_columns:
         df[column] = df[column].round(2)
 
     # Encode categorical columns
+    print("Transforming DataFrame - Encode categorical columns...")
     categorical_columns = df.select_dtypes(include=["object"]).columns
     for column in categorical_columns:
         if column == "gender":
+            print("Encoding gender column...")
             df[column] = df[column].map({"M": 0, "F": 1})
         else:
+            print(f"Encoding {str(column)} column...")
             df[column] = df[column].astype("category").cat.codes
 
     return df
