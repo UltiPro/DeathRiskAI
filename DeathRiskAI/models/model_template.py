@@ -3,7 +3,7 @@ from typing import Optional
 import pandas as pd
 
 
-class Model(ABC):
+class ModelTemplate(ABC):
     """
     Base class for all models in the DeathRiskAI project.
     This class provides a template for model training, prediction, evaluation and saving/loading models.
