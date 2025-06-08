@@ -108,6 +108,7 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
             "apache_4a_icu_death_prob",  # ???
             "apache_3j_bodysystem",  # disqualification, result indicates probability of death
             "apache_2_bodysystem",  # disqualification, result indicates probability of death
+            "urineoutput_apache",  # ???
         ]
     )
 
@@ -152,7 +153,6 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
         "ph_apache": "ph",
         "sodium_apache": "sodium",
         "temp_apache": "temp",
-        "urineoutput_apache": "urineoutput",
         "ventilated_apache": "ventilated",
         "wbc_apache": "wbc",
     }
@@ -304,7 +304,6 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
             "h1_sysbp_max",
             "d1_sysbp_min",
             "d1_sysbp_max",
-            "urineoutput",
         ]
     ]
 
@@ -462,7 +461,6 @@ def silver_to_gold(df: pd.DataFrame) -> pd.DataFrame:
         "h1_sysbp_max",
         "d1_sysbp_min",
         "d1_sysbp_max",
-        "urineoutput",
     ]
     for column in columns_to_fill_mean:
         if column in df.columns:
