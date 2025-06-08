@@ -1,4 +1,6 @@
 import sys
+import numpy as np
+import random
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -8,80 +10,90 @@ import tensorflow as tf
 import pandas as pd
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from keras.utils import plot_model
 
 
 class TensorflowModel(ModelTemplate):
     def __init__(self, model_name: str):
         super().__init__(model_name)
         self.model = None
+        tf.random.set_seed(42)
+        np.random.seed(42)
+        random.seed(42)
 
     def build_model(self, input_dim: int) -> tf.keras.Model:
-        model = tf.keras.Sequential(
-            [
-                tf.keras.layers.Dense(128, activation="relu", input_shape=(input_dim,)),
-                tf.keras.layers.Dropout(0.3),
-                tf.keras.layers.Dense(64, activation="relu"),
-                tf.keras.layers.Dropout(0.2),
-                tf.keras.layers.Dense(32, activation="relu"),
-                tf.keras.layers.Dropout(0.1),
-                tf.keras.layers.Dense(16, activation="relu"),
-                tf.keras.layers.Dense(8, activation="relu"),
-                tf.keras.layers.Dense(4, activation="relu"),
-                tf.keras.layers.Dense(2, activation="relu"),
-                tf.keras.layers.Dense(1, activation="sigmoid"),
-            ]
-        )
+        model = tf.keras.Sequential([
+            tf.keras.layers.Input(shape=(input_dim,)),
+            tf.keras.layers.Dense(128, activation="relu"),
+            tf.keras.layers.Dropout(0.3),
+            tf.keras.layers.Dense(64, activation="relu"),
+            tf.keras.layers.Dropout(0.2),
+            tf.keras.layers.Dense(32, activation="relu"),
+            tf.keras.layers.Dropout(0.1),
+            tf.keras.layers.Dense(16, activation="relu"),
+            tf.keras.layers.Dense(8, activation="relu"),
+            tf.keras.layers.Dense(4, activation="relu"),
+            tf.keras.layers.Dense(2, activation="relu"),
+            tf.keras.layers.Dense(1, activation="sigmoid"),
+        ])
+        model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+        return model
+
+    def build_model_with_hp(self, hp, input_dim: int) -> tf.keras.Model:
+        model = tf.keras.Sequential()
+        model.add(tf.keras.layers.Input(shape=(input_dim,)))
+
+        for i in range(hp.Int("num_layers", 2, 5)):
+            model.add(tf.keras.layers.Dense(
+                units=hp.Int(f"units_{i}", min_value=32, max_value=256, step=32),
+                activation=hp.Choice("activation", ["relu", "tanh"]),
+            ))
+            model.add(tf.keras.layers.Dropout(
+                rate=hp.Float(f"dropout_{i}", 0.0, 0.5, step=0.1)
+            ))
+
+        model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
         model.compile(
-            optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"]
+            optimizer=tf.keras.optimizers.Adam(hp.Float("lr", 1e-4, 1e-2, sampling="log")),
+            loss="binary_crossentropy",
+            metrics=["accuracy"],
         )
         return model
 
-    def train(
-        self,
-        X: pd.DataFrame,
-        Y: pd.Series,
-        X_val: pd.DataFrame,
-        Y_val: pd.Series,
-        epochs: int = 20,
-        batch_size: int = 32,
-    ) -> object:
-
+    def train(self, X, Y, X_val, Y_val, epochs=20, batch_size=32) -> object:
         self.model = self.build_model(input_dim=X.shape[1])
-
-        # Ensure model directory exists
+        os.makedirs("visualizations", exist_ok=True)
+        plot_model(self.model, to_file=f"visualizations/{self.model_name}.png", show_shapes=True, show_layer_names=True)
         os.makedirs("models", exist_ok=True)
         model_path = f"models/{self.model_name}.h5"
 
         callbacks = [
             EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True),
-            ModelCheckpoint(
-                model_path, monitor="val_loss", save_best_only=True, verbose=1
-            ),
+            ModelCheckpoint(model_path, monitor="val_loss", save_best_only=True, verbose=1),
         ]
 
         self.model.fit(
-            X.values,
-            Y.values,
+            X.values, Y.values,
             validation_data=(X_val.values, Y_val.values),
-            epochs=epochs,
-            batch_size=batch_size,
-            callbacks=callbacks,
-            verbose=2,
+            epochs=epochs, batch_size=batch_size,
+            callbacks=callbacks, verbose=2
         )
-
         return self.model
 
-    def predict(self, X) -> pd.Series:
+    def predict_proba(self, X) -> pd.Series:
         preds = self.model.predict(X)
-        return pd.Series(preds.flatten()).apply(lambda x: 1 if x >= 0.5 else 0)
+        return pd.Series(preds.flatten())
+
+    def predict(self, X) -> pd.Series:
+        return self.predict_proba(X).apply(lambda x: 1 if x >= 0.5 else 0)
 
     def evaluate(self, X, Y) -> dict:
         preds = self.predict(X)
         return {
             "accuracy": accuracy_score(Y, preds),
-            "precision": precision_score(Y, preds),
-            "recall": recall_score(Y, preds),
-            "f1_score": f1_score(Y, preds),
+            "precision": precision_score(Y, preds, zero_division=0),
+            "recall": recall_score(Y, preds, zero_division=0),
+            "f1_score": f1_score(Y, preds, zero_division=0),
         }
 
     def save(self, path: str) -> None:
