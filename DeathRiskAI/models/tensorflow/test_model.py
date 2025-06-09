@@ -9,10 +9,10 @@ if __name__ == "__main__":
 
     # Load final model
     model = TensorflowModel(model_name="final_model")
-    model.load("models/final_model.h5")
+    model.load("models/final_model.keras")
 
     # Predict
-    predictions = model.predict(X_test)
+    predictions = model.predict(X_test, threshold=0.3)
     proba = model.predict_proba(X_test)
 
     # Save predictions
@@ -23,9 +23,11 @@ if __name__ == "__main__":
     })
     results.to_csv("results/test_predictions.csv", index=False)
 
-    # Print and save classification report
+    # Classification report
     report = classification_report(Y_test, predictions, output_dict=True)
     print("\nClassification Report on Test Data:")
     print(classification_report(Y_test, predictions))
 
     pd.DataFrame(report).transpose().to_csv("results/test_metrics.csv", index=True)
+
+    print("\n✅ Test predictions and metrics saved to results/")

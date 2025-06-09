@@ -33,11 +33,25 @@ def create_folds(
         X, Y, test_size=test_size, stratify=Y, random_state=random_state
     )
 
+    # Save the full training set (without folds) for final model
+    print("Saving the entire training set (90%) for final model...")
+    X_trainval.to_parquet("./train_test_data/X_trainval.parquet", index=False)
+    Y_trainval.to_frame(name="death").to_parquet(
+        "./train_test_data/Y_trainval.parquet", index=False
+    )
+
+    # Save the test set
+    print("Saving test set (10%)...")
+    X_test.to_parquet("./train_test_data/X_test.parquet", index=False)
+    Y_test.to_frame(name="death").to_parquet(
+        "./train_test_data/Y_test.parquet", index=False
+    )
+
     # Create Stratified K-Folds
     print(f"Creating Stratified K-Folds with n_splits={n_splits}...")
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
 
-    # Saving the train-validation folds
+    # Saving the folds for metrics only
     print("Saving train-validation folds...")
     for fold_idx, (train_idx, val_idx) in enumerate(skf.split(X_trainval, Y_trainval)):
         X_train, X_val = X_trainval.iloc[train_idx], X_trainval.iloc[val_idx]
@@ -58,19 +72,12 @@ def create_folds(
             f"./train_test_data/fold{fold_idx}_Y_val.parquet", index=False
         )
 
-    # Saving the test set
-    print("Saving test set...")
-    X_test.to_parquet("./train_test_data/X_test.parquet", index=False)
-    Y_test.to_frame(name="death").to_parquet(
-        "./train_test_data/Y_test.parquet", index=False
-    )
-
     print(Fore.GREEN + "Done." + Style.RESET_ALL)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Create stratified folds from gold dataset."
+        description="Create train-test splits and folds for the Death Risk AI model."
     )
     parser.add_argument(
         "--test_size", type=float, default=0.1, help="Test set size (default: 0.1)"

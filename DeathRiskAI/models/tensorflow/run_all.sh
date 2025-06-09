@@ -1,19 +1,20 @@
 #!/bin/bash
-echo "=============================================="
-echo "  Step 1: Tuning hiperparametrów (cross-val)  "
-echo "=============================================="
-#python3 tune_cv_model.py
 
 echo "=============================================="
-echo "  Step 2: Trenowanie finalnego modelu         "
+echo "  Step 1: Tuning hyperparameters              "
 echo "=============================================="
-#python3 train_cv_model.py
+python3 tune_model.py
 
 echo "=============================================="
-echo "  Step 3: Testowanie finalnego modelu         "
+echo "  Step 2: Training final model                "
+echo "=============================================="
+python3 train_model.py
+
+echo "=============================================="
+echo "  Step 3: Testing final model                 "
 echo "=============================================="
 python3 test_model.py
 
 echo "=============================================="
-echo "  Wszystko gotowe! Wyniki zapisane!           "
+echo "  All steps complete!                         "
 echo "=============================================="

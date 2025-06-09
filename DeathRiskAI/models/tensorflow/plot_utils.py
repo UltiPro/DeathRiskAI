@@ -1,45 +1,36 @@
 import matplotlib.pyplot as plt
-import seaborn as sns
+import os
 
 
 def plot_training_history(history, name="model"):
-    plt.figure(figsize=(12, 5))
+    """
+    Plots training and validation loss and saves to PNG and TXT.
+    """
+    os.makedirs("visualizations", exist_ok=True)
 
-    plt.subplot(1, 2, 1)
-    plt.plot(history.history["loss"], label="Train Loss")
-    plt.plot(history.history["val_loss"], label="Val Loss")
-    plt.title(f"{name} - Loss")
+    # Plot loss curves
+    plt.figure(figsize=(8, 6))
+    plt.plot(history.history["loss"], label="Training Loss")
+    plt.plot(history.history["val_loss"], label="Validation Loss")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend()
-    plt.grid(True)
+    plt.title(f"Training and Validation Loss for {name}")
+    plt.savefig(f"visualizations/{name}_loss.png")
+    plt.close()
 
-    plt.subplot(1, 2, 2)
-    plt.plot(history.history["accuracy"], label="Train Accuracy")
-    plt.plot(history.history["val_accuracy"], label="Val Accuracy")
-    plt.title(f"{name} - Accuracy")
-    plt.xlabel("Epoch")
-    plt.ylabel("Accuracy")
-    plt.legend()
-    plt.grid(True)
-
-    plt.tight_layout()
-    plt.savefig(f"{name}_training_history.png")
-    plt.show()
+    # Save history as TXT
+    with open(f"visualizations/{name}_history.txt", "w") as f:
+        for key, values in history.history.items():
+            f.write(f"{key}: {values}\n")
 
 
-def plot_tuner_results(tuner):
-    tuner.results_summary()
-
-    trials = tuner.oracle.get_best_trials(num_trials=10)
-    accuracies = [trial.score for trial in trials]
-    trial_ids = [trial.trial_id for trial in trials]
-
-    plt.figure(figsize=(8, 5))
-    plt.bar(trial_ids, accuracies)
-    plt.xlabel("Trial ID")
-    plt.ylabel("Validation Accuracy")
-    plt.title("Top KerasTuner Trials")
-    plt.tight_layout()
-    plt.savefig("tuner_results.png")
-    plt.show()
+def plot_tuner_results(tuner, name="tuner"):
+    """
+    Plots the results summary of Keras Tuner search and saves to TXT.
+    """
+    pass
+    # os.makedirs("results", exist_ok=True)
+    # Save results summary to a text file
+    # with open(f"results/{name}_summary.txt", "w") as f:
+    # f.write(tuner.results_summary())
