@@ -66,16 +66,16 @@ def feature_transformation(
 
     # Save the training set
     print("Saving training set...")
-    X_trainval.to_parquet("./train_test_data/X_trainval.parquet", index=False)
+    X_trainval.to_parquet("./trainval_test_data/X_trainval.parquet", index=False)
     Y_trainval.to_frame(name="death").to_parquet(
-        "./train_test_data/Y_trainval.parquet", index=False
+        "./trainval_test_data/Y_trainval.parquet", index=False
     )
 
     # Save the testing set
     print("Saving testing set...")
-    X_test.to_parquet("./train_test_data/X_test.parquet", index=False)
+    X_test.to_parquet("./trainval_test_data/X_test.parquet", index=False)
     Y_test.to_frame(name="death").to_parquet(
-        "./train_test_data/Y_test.parquet", index=False
+        "./trainval_test_data/Y_test.parquet", index=False
     )
 
     print(Fore.GREEN + "Done." + Style.RESET_ALL)
