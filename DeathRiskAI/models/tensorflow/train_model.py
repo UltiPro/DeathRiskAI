@@ -9,8 +9,8 @@ import os
 from imblearn.over_sampling import SMOTE
 
 def load_trainval_data():
-    X_trainval = pd.read_parquet("./../train_test_data/X_trainval.parquet")
-    Y_trainval = pd.read_parquet("./../train_test_data/Y_trainval.parquet").squeeze()
+    X_trainval = pd.read_parquet("./../trainval_test_data/X_trainval.parquet")
+    Y_trainval = pd.read_parquet("./../trainval_test_data/Y_trainval.parquet").squeeze()
     return X_trainval, Y_trainval
 
 def load_best_hp(path="results/best_hp.json"):

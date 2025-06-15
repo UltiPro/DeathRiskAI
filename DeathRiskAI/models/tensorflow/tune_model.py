@@ -9,8 +9,8 @@ import json
 
 if __name__ == "__main__":
     # Load the entire trainval data for tuning
-    X_train = pd.read_parquet("./../train_test_data//X_trainval.parquet")
-    Y_train = pd.read_parquet("./../train_test_data//Y_trainval.parquet").squeeze()
+    X_train = pd.read_parquet("./../trainval_test_data/X_trainval.parquet")
+    Y_train = pd.read_parquet("./../trainval_test_data/Y_trainval.parquet").squeeze()
 
     input_dim = X_train.shape[1]
 
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     tuner = kt.Hyperband(
         model_builder,
         objective="val_accuracy",
-        max_epochs=30,
+        max_epochs=20,
         factor=3,
         directory="kerastuner",
         project_name="death_risk_tuning",
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         callbacks=[stop_early],
         batch_size=32,
         verbose=2,
-        epochs=30,
+        epochs=20,
     )
 
     plot_tuner_results(tuner)
@@ -58,6 +58,7 @@ if __name__ == "__main__":
         print(f"{param}: {value}")
 
     # Save best hyperparameters for later use
+    os.makedirs("results", exist_ok=True)
     with open("results/best_hp.json", "w") as f:
         json.dump(best_hp.values, f, indent=4)
 
@@ -67,7 +68,7 @@ if __name__ == "__main__":
         X_train.values,
         Y_train.values,
         validation_data=(X_tune_val.values, Y_tune_val.values),
-        epochs=30,
+        epochs=20,
         batch_size=32,
         callbacks=[stop_early],
         verbose=2,

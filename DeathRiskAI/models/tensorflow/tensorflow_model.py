@@ -112,7 +112,7 @@ class TensorflowModel(ModelTemplate):
         model_path = f"models/{self.model_name}.keras"
 
         callbacks = [
-            EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True),
+            EarlyStopping(monitor="val_loss", patience=20, restore_best_weights=True),
             ModelCheckpoint(
                 model_path, monitor="val_loss", save_best_only=True, verbose=1
             ),
@@ -126,7 +126,7 @@ class TensorflowModel(ModelTemplate):
             batch_size=batch_size,
             callbacks=callbacks,
             verbose=2,
-            class_weight={0: 1.0, 1: 10.0},
+            class_weight={0: 1.0, 1: 2.0},
         )
         return self.model
 
@@ -134,7 +134,7 @@ class TensorflowModel(ModelTemplate):
         preds = self.model.predict(X)
         return pd.Series(preds.flatten())
 
-    def predict(self, X, threshold=0.3) -> pd.Series:
+    def predict(self, X, threshold=0.5) -> pd.Series:
         return self.predict_proba(X).apply(lambda x: 1 if x >= threshold else 0)
 
     def evaluate(self, X, Y) -> dict:
