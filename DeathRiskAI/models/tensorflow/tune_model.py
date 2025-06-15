@@ -6,6 +6,7 @@ from tensorflow_model import TensorflowModel
 from tensorflow.keras.callbacks import EarlyStopping
 from plot_utils import plot_training_history, plot_tuner_results
 import json
+from imblearn.over_sampling import SMOTE
 
 if __name__ == "__main__":
     # Load the entire trainval data for tuning
@@ -40,9 +41,14 @@ if __name__ == "__main__":
         Y_train.iloc[-int(0.1 * len(Y_train)) :],
     )
 
+    # Apply SMOTE to training part only (not validation)
+    print("🔄 Applying SMOTE to tuning training data...")
+    smote = SMOTE(random_state=42)
+    X_tune_train_res, Y_tune_train_res = smote.fit_resample(X_tune_train, Y_tune_train)
+
     tuner.search(
-        X_tune_train.values,
-        Y_tune_train.values,
+        X_tune_train_res,
+        Y_tune_train_res,
         validation_data=(X_tune_val.values, Y_tune_val.values),
         callbacks=[stop_early],
         batch_size=32,

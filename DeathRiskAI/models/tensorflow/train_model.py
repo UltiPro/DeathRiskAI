@@ -8,15 +8,18 @@ import os
 
 from imblearn.over_sampling import SMOTE
 
+
 def load_trainval_data():
     X_trainval = pd.read_parquet("./../trainval_test_data/X_trainval.parquet")
     Y_trainval = pd.read_parquet("./../trainval_test_data/Y_trainval.parquet").squeeze()
     return X_trainval, Y_trainval
 
+
 def load_best_hp(path="results/best_hp.json"):
     with open(path, "r") as f:
         best_hp = json.load(f)
     return best_hp
+
 
 if __name__ == "__main__":
     # Load data
@@ -38,11 +41,17 @@ if __name__ == "__main__":
     # Initialize model
     model_wrapper = TensorflowModel(model_name="final_model")
     model = model_wrapper.build_model_from_config(best_hp, input_dim=input_dim)
+    model_wrapper.model = (
+        model  # 🔁 Ustawienie we wrapperze do użycia w visualize_model
+    )
+
+    # ✅ Wizualizacja struktury modelu
+    model_wrapper.visualize_model()
 
     # Prepare callbacks
     os.makedirs("models", exist_ok=True)
     stop_early = EarlyStopping(
-        monitor="val_loss", patience=20, restore_best_weights=True
+        monitor="val_loss", patience=30, restore_best_weights=True
     )
     checkpoint = ModelCheckpoint(
         "models/final_model.keras", monitor="val_loss", save_best_only=True, verbose=1
