@@ -39,7 +39,7 @@ def feature_transformation(
     # Calculating z-scores for class 0
     # class 1 is not standardized
     z_scores_0 = np.abs((X_0 - X_0.mean()) / X_0.std())
-    is_outlier_0 = (z_scores_0 > 3).any(axis=1)
+    is_outlier_0 = (z_scores_0 > 2).any(axis=1)
 
     # Removing outliers from class 0
     X_0_clean = X_0[~is_outlier_0]
