@@ -1,4 +1,1 @@
-/train_test_data/fold*
-/train_test_data/X*
-/train_test_data/Y*
 /tensorflow/kerastuner/*
