@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import os
+import io
+import sys
 
 
 def plot_training_history(history, name="model"):
@@ -27,10 +29,20 @@ def plot_training_history(history, name="model"):
 
 def plot_tuner_results(tuner, name="tuner"):
     """
-    Plots the results summary of Keras Tuner search and saves to TXT.
+    Saves the summary of Keras Tuner search to a text file.
     """
-    pass
-    # os.makedirs("results", exist_ok=True)
-    # Save results summary to a text file
-    # with open(f"results/{name}_summary.txt", "w") as f:
-    # f.write(tuner.results_summary())
+    os.makedirs("results", exist_ok=True)
+    summary_path = f"results/{name}_summary.txt"
+
+    # Przechwycenie stdout
+    buffer = io.StringIO()
+    sys_stdout = sys.stdout
+    sys.stdout = buffer
+
+    try:
+        tuner.results_summary()
+    finally:
+        sys.stdout = sys_stdout
+
+    with open(summary_path, "w") as f:
+        f.write(buffer.getvalue())

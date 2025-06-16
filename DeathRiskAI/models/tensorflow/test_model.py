@@ -1,8 +1,10 @@
-import pandas as pd
+import os
+import json
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, f1_score
 from tensorflow_model import TensorflowModel
-import json
 
 
 def find_best_threshold(y_true, y_proba):
@@ -25,12 +27,15 @@ if __name__ == "__main__":
     # Predict probabilities
     proba = model.predict_proba(X_test)
 
-    # Find best threshold based on F1-score
+    # Find best threshold
     best_thresh, best_f1 = find_best_threshold(Y_test, proba)
     print(f"\n🔍 Best threshold found: {best_thresh:.2f} (F1-score: {best_f1:.4f})")
 
     # Predict using best threshold
     predictions = (proba >= best_thresh).astype(int)
+
+    # Ensure output folder
+    os.makedirs("results", exist_ok=True)
 
     # Save threshold
     with open("results/best_threshold.json", "w") as f:
@@ -51,4 +56,44 @@ if __name__ == "__main__":
 
     pd.DataFrame(report).transpose().to_csv("results/test_metrics.csv", index=True)
 
-    print("\n✅ Test predictions, metrics and threshold saved to results/")
+    # 📈 Plot classification metrics
+    metrics_df = pd.DataFrame(report).transpose()
+    metrics_to_plot = ["precision", "recall", "f1-score"]
+    classes_to_plot = ["0", "1"]
+    metrics_df = metrics_df.loc[classes_to_plot, metrics_to_plot]
+
+    ax = metrics_df.plot(kind="bar", figsize=(8, 6))
+    plt.title("Precision, Recall, F1-score per Class")
+    plt.ylabel("Score")
+    plt.ylim(0, 1.05)
+    plt.xticks(rotation=0)
+    plt.grid(axis="y", linestyle="--", alpha=0.7)
+    plt.legend(loc="lower right")
+    plt.tight_layout()
+    plt.savefig("results/classification_metrics.png")
+    plt.close()
+
+    print("📈 Saved bar chart: results/classification_metrics.png")
+
+    # 📄 Save pretty table of metrics to TXT
+    with open("results/test_metrics_table.txt", "w") as f:
+        f.write("📊 Classification Report on Test Data\n\n")
+        f.write("{:<15} {:<10} {:<10} {:<10} {:<10}\n".format("Class", "Precision", "Recall", "F1-score", "Support"))
+        f.write("-" * 60 + "\n")
+        for label in ["0", "1", "accuracy", "macro avg", "weighted avg"]:
+            if label == "accuracy":
+                support_sum = int(report["0"]["support"]) + int(report["1"]["support"])
+                f.write("{:<15} {:<10} {:<10} {:<10.2f} {:<10}\n".format(
+                    label, "", "", report["accuracy"], support_sum
+                ))
+            else:
+                row = report[label]
+                f.write("{:<15} {:<10.2f} {:<10.2f} {:<10.2f} {:<10}\n".format(
+                    label,
+                    row.get("precision", 0.0),
+                    row.get("recall", 0.0),
+                    row.get("f1-score", 0.0),
+                    int(row.get("support", 0))
+                ))
+
+    print("📝 Saved metrics as text table to: results/test_metrics_table.txt")

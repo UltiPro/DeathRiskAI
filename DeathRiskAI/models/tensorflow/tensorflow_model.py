@@ -37,7 +37,14 @@ class TensorflowModel(ModelTemplate):
             ]
         )
         model.compile(
-            optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"]
+            optimizer="adam",
+            loss="binary_crossentropy",
+            metrics=[
+                "accuracy",
+                tf.keras.metrics.Precision(),
+                tf.keras.metrics.Recall(),
+                tf.keras.metrics.AUC(),
+            ],
         )
         return model
 
@@ -64,7 +71,12 @@ class TensorflowModel(ModelTemplate):
                 hp.Float("lr", 1e-4, 1e-2, sampling="log")
             ),
             loss="binary_crossentropy",
-            metrics=["accuracy"],
+            metrics=[
+                "accuracy",
+                tf.keras.metrics.Precision(),
+                tf.keras.metrics.Recall(),
+                tf.keras.metrics.AUC(),
+            ],
         )
         return model
 
@@ -98,15 +110,7 @@ class TensorflowModel(ModelTemplate):
 
     def train(self, X, Y, X_val, Y_val, epochs=100, batch_size=32) -> object:
         self.model = self.build_model(input_dim=X.shape[1])
-
-        # Zapisz strukturę modelu do pliku graficznego
-        os.makedirs("visualizations", exist_ok=True)
-        plot_model(
-            self.model,
-            to_file=f"visualizations/{self.model_name}_structure.png",
-            show_shapes=True,
-            show_layer_names=True,
-        )
+        self.visualize_model()  # ✅ Dodane
 
         os.makedirs("models", exist_ok=True)
         model_path = f"models/{self.model_name}.keras"
@@ -126,9 +130,27 @@ class TensorflowModel(ModelTemplate):
             batch_size=batch_size,
             callbacks=callbacks,
             verbose=2,
-            class_weight={0: 1.0, 1: 2.0},
+            class_weight={0: 1.0, 1: 1.0},
         )
         return self.model
+
+    def visualize_model(self):
+        """
+        Saves a visualization of the current model architecture.
+        """
+        if self.model is not None:
+            os.makedirs("visualizations", exist_ok=True)
+            plot_model(
+                self.model,
+                to_file=f"visualizations/{self.model_name}_structure.png",
+                show_shapes=True,
+                show_layer_names=True,
+            )
+            print(
+                f"✅ Model structure saved to visualizations/{self.model_name}_structure.png"
+            )
+        else:
+            print("❌ No model to visualize.")
 
     def predict_proba(self, X) -> pd.Series:
         preds = self.model.predict(X)
