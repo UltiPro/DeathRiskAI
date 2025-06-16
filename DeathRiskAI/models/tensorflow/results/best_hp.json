@@ -1,0 +1,20 @@
+{
+    "num_layers": 5,
+    "units_0": 224,
+    "activation": "relu",
+    "dropout_0": 0.30000000000000004,
+    "units_1": 256,
+    "dropout_1": 0.30000000000000004,
+    "lr": 0.0004986787447507789,
+    "units_2": 256,
+    "dropout_2": 0.1,
+    "units_3": 64,
+    "dropout_3": 0.0,
+    "units_4": 128,
+    "dropout_4": 0.4,
+    "tuner/epochs": 20,
+    "tuner/initial_epoch": 7,
+    "tuner/bracket": 2,
+    "tuner/round": 2,
+    "tuner/trial_id": "0012"
+}

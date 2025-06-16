@@ -1,0 +1,9 @@
+📊 Classification Report on Test Data
+
+Class           Precision  Recall     F1-score   Support   
+------------------------------------------------------------
+0               0.95       0.98       0.97       731       
+1               0.96       0.90       0.93       371       
+accuracy                              0.95       1102      
+macro avg       0.96       0.94       0.95       1102      
+weighted avg    0.95       0.95       0.95       1102      
