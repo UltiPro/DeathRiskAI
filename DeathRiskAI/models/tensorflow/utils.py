@@ -3,8 +3,10 @@ import io
 import sys
 import matplotlib.pyplot as plt
 
+RANDOM_SEED = 42
 
-def plot_tuner_results(tuner, name="tuner"):
+
+def save_tuner_results(tuner, name="tuner"):
     """
     Saves the summary of Keras Tuner search to a text file.
     """
@@ -30,7 +32,7 @@ def plot_tuner_results(tuner, name="tuner"):
         f.write(buffer.getvalue())
 
 
-def plot_training_history(history, name="model"):
+def save_training_history(history, name="model"):
     """
     Plots training and validation loss and saves to PNG and TXT.
     """
