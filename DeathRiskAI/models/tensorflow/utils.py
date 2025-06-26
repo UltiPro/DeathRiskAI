@@ -3,7 +3,9 @@ import io
 import sys
 import matplotlib.pyplot as plt
 
-RANDOM_SEED = 42
+from feature_transformation import RANDOM_SEED as RND_SEED
+
+RANDOM_SEED = RND_SEED
 
 
 def save_tuner_results(tuner, name="tuner"):

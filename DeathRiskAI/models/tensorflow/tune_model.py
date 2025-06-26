@@ -6,10 +6,8 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import EarlyStopping
 from imblearn.over_sampling import SMOTE
 
-from utils import RANDOM_SEED
 from tensorflow_model import TensorflowModel
-from DeathRiskAI.models.tensorflow.utils import save_tuner_results
-
+from utils import RANDOM_SEED, save_tuner_results
 
 if __name__ == "__main__":
     # Ensure the results directory exists
