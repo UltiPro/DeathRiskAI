@@ -25,18 +25,14 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
     input_rows_len = len(df)
 
     # Calculate missing values depending on other columns
-    print(
-        "\nTransforming DataFrame - Calculate missing values depending on other columns..."
-    )
+    print("\nTransforming DataFrame - Calculate missing values depending on other columns...")
 
     # If bmi is missing, calculate it using the formula: weight / (height / 100) ** 2
     print("Calculate BMI if missing...")
     df["bmi"] = df.apply(
         lambda row: (
             row["weight"] / ((row["height"] / 100) ** 2)
-            if pd.isnull(row["bmi"])
-            and not pd.isnull(row["weight"])
-            and not pd.isnull(row["height"])
+            if pd.isnull(row["bmi"]) and not pd.isnull(row["weight"]) and not pd.isnull(row["height"])
             else row["bmi"]
         ),
         axis=1,
@@ -44,12 +40,7 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
 
     # Drop unnecessary columns
     print("Transforming DataFrame - Drop unnecessary columns...")
-    print(
-        "Number of columns before dropping: "
-        + Fore.RED
-        + str(input_columns_len)
-        + Style.RESET_ALL
-    )
+    print("Number of columns before dropping: " + Fore.RED + str(input_columns_len) + Style.RESET_ALL)
 
     # "???" means that the column is not used in the model but may be useful for future analysis
     df = df.drop(
@@ -112,21 +103,11 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
         ]
     )
 
-    print(
-        "Number of columns after dropping: "
-        + Fore.RED
-        + str(len(df.columns))
-        + Style.RESET_ALL
-    )
+    print("Number of columns after dropping: " + Fore.RED + str(len(df.columns)) + Style.RESET_ALL)
 
     # Drop rows with missing values in key columns
     print("Transforming DataFrame - Drop rows with missing values in key columns...")
-    print(
-        "Number of rows before dropping: "
-        + Fore.RED
-        + str(input_rows_len)
-        + Style.RESET_ALL
-    )
+    print("Number of rows before dropping: " + Fore.RED + str(input_rows_len) + Style.RESET_ALL)
 
     df = df.dropna(subset=["gender", "age", "bmi"]).copy()
 
@@ -158,12 +139,7 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
     }
     df = df.rename(columns=columns_to_rename)
 
-    print(
-        "Number of renamed columns: "
-        + Fore.RED
-        + str(len(columns_to_rename))
-        + Style.RESET_ALL
-    )
+    print("Number of renamed columns: " + Fore.RED + str(len(columns_to_rename)) + Style.RESET_ALL)
 
     # Reorder columns to match the desired output
     print("Transforming DataFrame - Reorder columns to match the desired output...")
@@ -500,20 +476,12 @@ if __name__ == "__main__":
             df = pd.read_csv(file)
             df = bronze_to_silver(df)
             df.to_csv("./1_silver/silver.csv", index=False)
-        print(
-            Fore.GREEN
-            + "Transformation complete. Silver DataFrame saved."
-            + Style.RESET_ALL
-        )
+        print(Fore.GREEN + "Transformation complete. Silver DataFrame saved." + Style.RESET_ALL)
     elif choice == "2":
         with open("./1_silver/silver.csv", "r") as file:
             df = pd.read_csv(file)
             df = silver_to_gold(df)
             df.to_csv("./2_gold/gold.csv", index=False)
-        print(
-            Fore.GREEN
-            + "Transformation complete. Gold DataFrame saved."
-            + Style.RESET_ALL
-        )
+        print(Fore.GREEN + "Transformation complete. Gold DataFrame saved." + Style.RESET_ALL)
     else:
         print(Fore.RED + "Invalid choice. Exiting." + Style.RESET_ALL)

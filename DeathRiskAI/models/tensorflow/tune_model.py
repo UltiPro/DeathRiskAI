@@ -9,6 +9,7 @@ from imblearn.over_sampling import SMOTE
 from tensorflow_model import TensorflowModel
 from utils import RANDOM_SEED, save_tuner_results
 
+
 if __name__ == "__main__":
     # Ensure the results directory exists
     os.makedirs("results", exist_ok=True)
@@ -30,7 +31,7 @@ if __name__ == "__main__":
     )
 
     # Early stopping to prevent overfitting
-    stop_early = EarlyStopping(monitor="val_loss", patience=10)
+    stop_early = EarlyStopping(monitor="val_loss", patience=10, restore_best_weights=True)
 
     # Load trainval data for hyperparameter tuning
     print("🔄 Loading trainval data for hyperparameter tuning...")
