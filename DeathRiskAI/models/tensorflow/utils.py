@@ -10,6 +10,7 @@ def save_tuner_results(tuner, name="tuner"):
     """
     Saves the summary of Keras Tuner search to a text file.
     """
+    # Ensure the results directory exists
     os.makedirs("results", exist_ok=True)
 
     # Redirect stdout to capture the summary output
@@ -17,8 +18,8 @@ def save_tuner_results(tuner, name="tuner"):
     sys_stdout = sys.stdout
     sys.stdout = buffer
 
-    # Generate the summary of the tuner results
     try:
+        # Generate the summary of the tuner results
         tuner.results_summary()
     except Exception as e:
         print(f"Error during tuner results summary: {e}")
@@ -36,6 +37,7 @@ def save_training_history(history, name="model"):
     """
     Plots training and validation loss and saves to PNG and TXT.
     """
+    # Ensure the visualizations directory exists
     os.makedirs("visualizations", exist_ok=True)
 
     # Plot loss curves
