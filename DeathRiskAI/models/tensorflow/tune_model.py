@@ -16,8 +16,7 @@ if __name__ == "__main__":
 
     # Define the model builder function for Keras Tuner
     def model_builder(hp):
-        model_wrapper = TensorflowModel(model_name="tuned_model")
-        return model_wrapper.build_model_with_hp(hp, input_dim=X_trainval.shape[1])
+        return TensorflowModel(model_name="tuned_model").build(hp, input_dim=X_trainval.shape[1])
 
     # Initialize the Keras Tuner with Hyperband
     tuner = kt.Hyperband(
@@ -70,7 +69,7 @@ if __name__ == "__main__":
     best_hp = tuner.get_best_hyperparameters(num_trials=1)[0]
 
     # Save the best hyperparameters
-    print("🔄 Saving the best hyperparameters to results/best_hp.json...")
+    print("🔄 Saving the best hyperparameters...")
     with open("results/best_hp.json", "w") as f:
         json.dump(best_hp.values, f, indent=4)
 

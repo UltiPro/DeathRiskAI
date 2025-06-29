@@ -1,175 +1,132 @@
-import sys
-import numpy as np
-import random
 import os
+import sys
+import random
+import numpy as np
+import pandas as pd
+from typing import Optional, Dict, Any, List
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import tensorflow as tf
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from model_template import ModelTemplate
 
-import tensorflow as tf
-import pandas as pd
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from keras.utils import plot_model
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class TensorflowModel(ModelTemplate):
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, random_seed: int):
+        """
+        Initializes the TensorFlow model with a given name and random seed.
+        """
         super().__init__(model_name)
         self.model = None
-        tf.random.set_seed(42)
-        np.random.seed(42)
-        random.seed(42)
+        random.seed(random_seed)
+        np.random.seed(random_seed)
+        tf.random.set_seed(random_seed)
 
-    def build_model(self, input_dim: int) -> tf.keras.Model:
-        model = tf.keras.Sequential(
-            [
-                tf.keras.layers.Input(shape=(input_dim,)),
-                tf.keras.layers.Dense(128, activation="relu"),
-                tf.keras.layers.Dropout(0.3),
-                tf.keras.layers.Dense(128, activation="relu"),
-                tf.keras.layers.Dropout(0.3),
-                tf.keras.layers.Dense(64, activation="relu"),
-                tf.keras.layers.Dropout(0.2),
-                tf.keras.layers.Dense(16, activation="relu"),
-                tf.keras.layers.Dropout(0.2),
-                tf.keras.layers.Dense(1, activation="sigmoid"),
-            ]
-        )
-        model.compile(
-            optimizer="adam",
-            loss="binary_crossentropy",
-            metrics=[
-                "accuracy",
-                tf.keras.metrics.Precision(),
-                tf.keras.metrics.Recall(),
-                tf.keras.metrics.AUC(),
-            ],
-        )
-        return model
+    def build(self, config: Dict[str, Any], input_dim: int) -> tf.keras.Model:
+        """
+        Builds a TensorFlow model based on the provided configuration.
+        """
 
-    def build_model_with_hp(self, hp, input_dim: int) -> tf.keras.Model:
+        def get(key, default=None):
+            return config.get(key) if isinstance(config, dict) else config.get(key, default)
+
+        def get_int(key, default=None):
+            return int(get(key, default))
+
+        def get_float(key, default=None):
+            return float(get(key, default))
+
+        # Create a sequential model
         model = tf.keras.Sequential()
+
+        # Add an input layer with the specified input dimension
         model.add(tf.keras.layers.Input(shape=(input_dim,)))
 
-        for i in range(hp.Int("num_layers", 2, 5)):
-            model.add(
-                tf.keras.layers.Dense(
-                    units=hp.Int(f"units_{i}", min_value=32, max_value=256, step=32),
-                    activation=hp.Choice("activation", ["relu", "tanh"]),
-                )
-            )
-            model.add(
-                tf.keras.layers.Dropout(
-                    rate=hp.Float(f"dropout_{i}", 0.0, 0.5, step=0.1)
-                )
-            )
+        # Add hidden layers based on the configuration
+        activation = get("activation", "relu")
+        for i in get_int("num_layers", 2):
+            model.add(tf.keras.layers.Dense(units=get_int(f"units_{i}", 64), activation=activation))
+            model.add(tf.keras.layers.Dropout(rate=get_float(f"dropout_{i}", 0.0)))
 
+        # Add the output layer
         model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
+
+        # Compile the model with the specified optimizer, loss function and metrics
         model.compile(
-            optimizer=tf.keras.optimizers.Adam(
-                hp.Float("lr", 1e-4, 1e-2, sampling="log")
-            ),
+            optimizer=tf.keras.optimizers.Adam(learning_rate=get_float("lr", 0.001)),
             loss="binary_crossentropy",
             metrics=[
-                "accuracy",
+                tf.keras.metrics.BinaryAccuracy(),
                 tf.keras.metrics.Precision(),
                 tf.keras.metrics.Recall(),
                 tf.keras.metrics.AUC(),
             ],
         )
+
+        # Store the model in the instance variable
+        self.model = model
+
         return model
 
-    def build_model_from_config(
-        self, hp_config: dict, input_dim: int
-    ) -> tf.keras.Model:
-        model = tf.keras.Sequential()
-        model.add(tf.keras.layers.Input(shape=(input_dim,)))
-
-        for i in range(hp_config["num_layers"]):
-            model.add(
-                tf.keras.layers.Dense(
-                    units=hp_config[f"units_{i}"],
-                    activation=hp_config["activation"],
-                )
-            )
-            model.add(tf.keras.layers.Dropout(rate=hp_config[f"dropout_{i}"]))
-
-        model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
-        model.compile(
-            optimizer="adam",
-            loss="binary_crossentropy",
-            metrics=[
-                "accuracy",
-                tf.keras.metrics.Precision(),
-                tf.keras.metrics.Recall(),
-                tf.keras.metrics.AUC(),
-            ],
-        )
-        return model
-
-    def train(self, X, Y, X_val, Y_val, epochs=100, batch_size=32) -> object:
-        self.model = self.build_model(input_dim=X.shape[1])
-        self.visualize_model()  # ✅ Dodane
-
-        os.makedirs("models", exist_ok=True)
-        model_path = f"models/{self.model_name}.keras"
-
-        callbacks = [
-            EarlyStopping(monitor="val_loss", patience=20, restore_best_weights=True),
-            ModelCheckpoint(
-                model_path, monitor="val_loss", save_best_only=True, verbose=1
-            ),
-        ]
-
-        self.model.fit(
-            X.values,
-            Y.values,
+    def train(
+        self,
+        X_train: pd.DataFrame,
+        Y_train: pd.Series,
+        X_val: pd.DataFrame,
+        Y_val: pd.Series,
+        epochs: int = 100,
+        batch_size: int = 64,
+        callbacks: Optional[List[tf.keras.callbacks.Callback]] = [],
+        class_weight: Optional[Dict[int, float]] = {1: 1.0, 0: 1.0},
+    ) -> tf.keras.callbacks.History:
+        """
+        Trains the TensorFlow model with the provided training data, validation data and configuration parameters.
+        Returns the training history.
+        """
+        return self.model.fit(
+            X_train.values,
+            Y_train.values,
             validation_data=(X_val.values, Y_val.values),
             epochs=epochs,
             batch_size=batch_size,
             callbacks=callbacks,
+            class_weight=class_weight,
+            shuffle=True,
             verbose=2,
-            class_weight={0: 1.0, 1: 1.0},
         )
-        return self.model
 
-    def visualize_model(self):
+    def predict(self, X: pd.DataFrame, threshold: Optional[float] = None) -> pd.Series:
         """
-        Saves a visualization of the current model architecture.
+        Predicts the probabilities of the positive class for the provided dataset.
+        If a threshold is provided, it returns binary predictions based on that threshold.
         """
-        if self.model is not None:
-            os.makedirs("visualizations", exist_ok=True)
-            plot_model(
-                self.model,
-                to_file=f"visualizations/{self.model_name}_structure.png",
-                show_shapes=True,
-                show_layer_names=True,
-            )
-            print(
-                f"✅ Model structure saved to visualizations/{self.model_name}_structure.png"
-            )
-        else:
-            print("❌ No model to visualize.")
+        if threshold is not None:
+            return pd.Series((self.model.predict(X).flatten() >= threshold).astype(int))
+        return pd.Series(self.model.predict(X).flatten())
 
-    def predict_proba(self, X) -> pd.Series:
-        preds = self.model.predict(X)
-        return pd.Series(preds.flatten())
-
-    def predict(self, X, threshold=0.5) -> pd.Series:
-        return self.predict_proba(X).apply(lambda x: 1 if x >= threshold else 0)
-
-    def evaluate(self, X, Y) -> dict:
-        preds = self.predict(X)
+    def evaluate(self, X: pd.DataFrame, Y: pd.Series, threshold: float = 0.5) -> Dict[str, float]:
+        """
+        Evaluates the model's performance on the provided dataset and returns a dictionary of metrics.
+        """
+        predictions = self.predict(X, threshold)
         return {
-            "accuracy": accuracy_score(Y, preds),
-            "precision": precision_score(Y, preds, zero_division=0),
-            "recall": recall_score(Y, preds, zero_division=0),
-            "f1_score": f1_score(Y, preds, zero_division=0),
+            "accuracy": accuracy_score(Y, predictions, zero_division=0),
+            "precision": precision_score(Y, predictions, zero_division=0),
+            "recall": recall_score(Y, predictions, zero_division=0),
+            "f1": f1_score(Y, predictions, zero_division=0),
         }
 
     def save(self, path: str) -> None:
+        """
+        Saves the TensorFlow model to the specified path.
+        """
         self.model.save(path)
 
     def load(self, path: str) -> None:
+        """
+        Loads a TensorFlow model from the specified path.
+        """
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"🛑 Model file not found at '{path}'.")
         self.model = tf.keras.models.load_model(path)

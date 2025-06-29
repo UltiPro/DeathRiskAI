@@ -2,13 +2,16 @@ import os
 import io
 import sys
 import matplotlib.pyplot as plt
+import tensorflow as tf
+from keras_tuner import Tuner
+from keras.utils import plot_model
 
 from feature_transformation import RANDOM_SEED as RND_SEED
 
 RANDOM_SEED = RND_SEED
 
 
-def save_tuner_results(tuner, name="tuner"):
+def save_tuner_results(tuner: Tuner, name: str = "tuner") -> None:
     """
     Saves the summary of Keras Tuner search to a text file.
     """
@@ -24,8 +27,8 @@ def save_tuner_results(tuner, name="tuner"):
         # Generate the summary of the tuner results
         tuner.results_summary()
     except Exception as e:
-        print(f"Error during tuner results summary: {e}")
-        print("Please ensure that the Keras Tuner is properly configured and has completed the search.")
+        print(f"🛑 Error during tuner results summary: {e}")
+        return
     finally:
         # Reset stdout to its original state
         sys.stdout = sys_stdout
@@ -35,7 +38,27 @@ def save_tuner_results(tuner, name="tuner"):
         f.write(buffer.getvalue())
 
 
-def save_training_history(history, name="model"):
+def save_model_visualization(model: tf.keras.Model, name: str = "model") -> None:
+    """
+    Visualizes the structure of the Keras model and saves it as an image.
+    """
+    # Ensure the visualizations directory exists
+    os.makedirs("visualizations", exist_ok=True)
+
+    # Plot the model structure and save it to a file
+    plot_model(
+        model,
+        to_file=f"visualizations/{name}_structure.png",
+        show_shapes=True,
+        show_layer_names=True,
+        show_layer_activations=True,
+        expand_nested=True,
+        rankdir="TB",
+        dpi=300,
+    )
+
+
+def save_training_history(history: tf.keras.callbacks.History, name: str = "model") -> None:
     """
     Plots training and validation loss and saves to PNG and TXT.
     """
