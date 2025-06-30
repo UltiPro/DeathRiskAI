@@ -2,98 +2,78 @@ import os
 import json
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.metrics import classification_report, f1_score
+from typing import Union, Tuple
+from sklearn.metrics import f1_score
+
 from tensorflow_model import TensorflowModel
+from utils import RANDOM_SEED, save_metrics_table, save_metrics_plot
 
 
-def find_best_threshold(y_true, y_proba):
-    thresholds = np.arange(0.0, 1.01, 0.01)
-    f1_scores = [f1_score(y_true, y_proba >= t) for t in thresholds]
-    best_threshold = float(thresholds[np.argmax(f1_scores)])
-    best_f1 = float(max(f1_scores))
-    return best_threshold, best_f1
+def find_best_threshold(
+    Y: Union[np.ndarray, pd.Series], Y_probabilities: Union[np.ndarray, pd.Series]
+) -> Tuple[float, float]:
+    thresholds = np.arange(0.0, 1.01, 0.0001)
+    f1_scores = [f1_score(Y, Y_probabilities >= t) for t in thresholds]
+    idx = np.argmax(f1_scores)
+    return float(thresholds[idx]), float(f1_scores[idx])
 
 
 if __name__ == "__main__":
-    # Load test data
+    # Ensure the results directory exists
+    os.makedirs("results", exist_ok=True)
+
+    # Initialize the TensorFlow model
+    tensorflowModel = TensorflowModel(model_name="final_model", random_seed=RANDOM_SEED)
+
+    # Load the TensorFlow model
+    print("🔄 Loading the TensorFlow model...")
+    tensorflowModel.load("models/final_model.keras")
+
+    # Load test data for evaluation the model
+    print("🔄 Loading test data for evaluation the model...")
     X_test = pd.read_parquet("./../trainval_test_data/X_test.parquet")
     Y_test = pd.read_parquet("./../trainval_test_data/Y_test.parquet").squeeze()
 
-    # Load final model
-    model = TensorflowModel(model_name="final_model")
-    model.load("models/final_model.keras")
+    # Predict probabilities on the test set
+    print("🔄 Predicting probabilities on the test set...")
+    probabilities = tensorflowModel.predict(X_test)
 
-    # Predict probabilities
-    proba = model.predict_proba(X_test)
+    # Find the best threshold for F1-score
+    print("🔍 Finding the best threshold for F1-score...")
+    best_threshold, best_f1_score = find_best_threshold(Y_test, probabilities)
 
-    # Find best threshold
-    best_thresh, best_f1 = find_best_threshold(Y_test, proba)
-    print(f"\n🔍 Best threshold found: {best_thresh:.2f} (F1-score: {best_f1:.4f})")
+    print(f"✅ Best threshold found: {best_threshold} with F1-score: {best_f1_score}")
 
-    # Predict using best threshold
-    predictions = (proba >= best_thresh).astype(int)
+    # Evaluate the model on the test set with the best threshold
+    print("📊 Evaluating the model on the test set with the best threshold...")
+    raport, predictions = tensorflowModel.evaluate(X_test, Y_test, threshold=best_threshold)
 
-    # Ensure output folder
-    os.makedirs("results", exist_ok=True)
+    print("📊 Evaluation metrics:")
+    for metric, value in raport.items():
+        print(f"{metric}: {value}")
 
-    # Save threshold
-    with open("results/best_threshold.json", "w") as f:
-        json.dump({"best_threshold": best_thresh, "f1_score": best_f1}, f)
+    # Save the best threshold and F1-score
+    print("💾 Saving the best threshold and F1-score...")
+    with open("results/threshold.json", "w") as f:
+        json.dump({"threshold": best_threshold, "f1_score": best_f1_score}, f, indent=4)
 
-    # Save predictions
-    results = pd.DataFrame({
-        "true": Y_test,
-        "pred": predictions,
-        "proba": proba
-    })
-    results.to_csv("results/test_predictions.csv", index=False)
+    # Save true values, predictions and probabilities
+    print("💾 Saving true values, predictions and probabilities...")
+    pd.DataFrame({"true_value": Y_test, "prediction": predictions, "probability": probabilities}).to_csv(
+        "results/predictions.csv", index=False
+    )
 
-    # Classification report
-    report = classification_report(Y_test, predictions, output_dict=True)
-    print("\n📊 Classification Report on Test Data:")
-    print(classification_report(Y_test, predictions))
+    # Save evaluation metrics
+    print("💾 Saving evaluation metrics...")
+    with open("results/metrics.json", "w") as f:
+        json.dump(raport, f, indent=4)
 
-    pd.DataFrame(report).transpose().to_csv("results/test_metrics.csv", index=True)
+    # Save metrics table
+    print("💾 Saving metrics table...")
+    save_metrics_table(raport)
 
-    # 📈 Plot classification metrics
-    metrics_df = pd.DataFrame(report).transpose()
-    metrics_to_plot = ["precision", "recall", "f1-score"]
-    classes_to_plot = ["0", "1"]
-    metrics_df = metrics_df.loc[classes_to_plot, metrics_to_plot]
+    # Plot and save the evaluation metrics
+    print("📈 Plotting and 💾 saving the evaluation metrics...")
+    save_metrics_plot(raport)
 
-    ax = metrics_df.plot(kind="bar", figsize=(8, 6))
-    plt.title("Precision, Recall, F1-score per Class")
-    plt.ylabel("Score")
-    plt.ylim(0, 1.05)
-    plt.xticks(rotation=0)
-    plt.grid(axis="y", linestyle="--", alpha=0.7)
-    plt.legend(loc="lower right")
-    plt.tight_layout()
-    plt.savefig("results/classification_metrics.png")
-    plt.close()
-
-    print("📈 Saved bar chart: results/classification_metrics.png")
-
-    # 📄 Save pretty table of metrics to TXT
-    with open("results/test_metrics_table.txt", "w") as f:
-        f.write("📊 Classification Report on Test Data\n\n")
-        f.write("{:<15} {:<10} {:<10} {:<10} {:<10}\n".format("Class", "Precision", "Recall", "F1-score", "Support"))
-        f.write("-" * 60 + "\n")
-        for label in ["0", "1", "accuracy", "macro avg", "weighted avg"]:
-            if label == "accuracy":
-                support_sum = int(report["0"]["support"]) + int(report["1"]["support"])
-                f.write("{:<15} {:<10} {:<10} {:<10.2f} {:<10}\n".format(
-                    label, "", "", report["accuracy"], support_sum
-                ))
-            else:
-                row = report[label]
-                f.write("{:<15} {:<10.2f} {:<10.2f} {:<10.2f} {:<10}\n".format(
-                    label,
-                    row.get("precision", 0.0),
-                    row.get("recall", 0.0),
-                    row.get("f1-score", 0.0),
-                    int(row.get("support", 0))
-                ))
-
-    print("📝 Saved metrics as text table to: results/test_metrics_table.txt")
+    print("✅ Model evaluation completed successfully!")
