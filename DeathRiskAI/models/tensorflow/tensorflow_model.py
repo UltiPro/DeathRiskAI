@@ -3,13 +3,13 @@ import sys
 import random
 import numpy as np
 import pandas as pd
-from typing import Optional, Dict, Any, List
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from typing import Optional, Union, Tuple, List, Dict
+from sklearn.metrics import classification_report
 import tensorflow as tf
-
-from model_template import ModelTemplate
+from keras_tuner.engine.hyperparameters import HyperParameters
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from model_template import ModelTemplate
 
 
 class TensorflowModel(ModelTemplate):
@@ -23,17 +23,33 @@ class TensorflowModel(ModelTemplate):
         np.random.seed(random_seed)
         tf.random.set_seed(random_seed)
 
-    def build(self, config: Dict[str, Any], input_dim: int) -> tf.keras.Model:
+    def build(
+        self, config: Union[Dict[str, float | int | str], HyperParameters], input_dim: int
+    ) -> tf.keras.Model:
         """
         Builds a TensorFlow model based on the provided configuration.
         """
+        # Define available optimizers
+        optimizers = {
+            "adam": tf.keras.optimizers.Adam,
+            "rmsprop": tf.keras.optimizers.RMSprop,
+            "sgd": tf.keras.optimizers.SGD,
+            "adamax": tf.keras.optimizers.Adamax,
+            "nadam": tf.keras.optimizers.Nadam,
+        }
 
+        # Helper functions to get configuration values with defaults
         def get(key, default=None):
-            return config.get(key) if isinstance(config, dict) else config.get(key, default)
+            try:
+                return config[key]
+            except (KeyError, TypeError):
+                return default
 
+        # Helper function to convert configuration values to int
         def get_int(key, default=None):
             return int(get(key, default))
 
+        # Helper function to convert configuration values to float
         def get_float(key, default=None):
             return float(get(key, default))
 
@@ -45,7 +61,7 @@ class TensorflowModel(ModelTemplate):
 
         # Add hidden layers based on the configuration
         activation = get("activation", "relu")
-        for i in get_int("num_layers", 2):
+        for i in range(get_int("num_layers", 1)):
             model.add(tf.keras.layers.Dense(units=get_int(f"units_{i}", 64), activation=activation))
             model.add(tf.keras.layers.Dropout(rate=get_float(f"dropout_{i}", 0.0)))
 
@@ -54,7 +70,7 @@ class TensorflowModel(ModelTemplate):
 
         # Compile the model with the specified optimizer, loss function and metrics
         model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=get_float("lr", 0.001)),
+            optimizer=optimizers.get(get("optimizer", "adam"))(learning_rate=get_float("lr", 0.001)),
             loss="binary_crossentropy",
             metrics=[
                 tf.keras.metrics.BinaryAccuracy(),
@@ -105,17 +121,15 @@ class TensorflowModel(ModelTemplate):
             return pd.Series((self.model.predict(X).flatten() >= threshold).astype(int))
         return pd.Series(self.model.predict(X).flatten())
 
-    def evaluate(self, X: pd.DataFrame, Y: pd.Series, threshold: float = 0.5) -> Dict[str, float]:
+    def evaluate(
+        self, X: pd.DataFrame, Y: pd.Series, threshold: Optional[float] = 0.5
+    ) -> Tuple[Dict[str, Dict[str, float]], pd.Series]:
         """
-        Evaluates the model's performance on the provided dataset and returns a dictionary of metrics.
+        Evaluates the model's performance on the provided dataset and returns
+        a tuple containing a dictionary of evaluation metrics and the predictions.
         """
         predictions = self.predict(X, threshold)
-        return {
-            "accuracy": accuracy_score(Y, predictions, zero_division=0),
-            "precision": precision_score(Y, predictions, zero_division=0),
-            "recall": recall_score(Y, predictions, zero_division=0),
-            "f1": f1_score(Y, predictions, zero_division=0),
-        }
+        return classification_report(Y, predictions, output_dict=True), predictions
 
     def save(self, path: str) -> None:
         """

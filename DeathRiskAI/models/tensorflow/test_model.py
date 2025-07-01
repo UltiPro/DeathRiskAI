@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import numpy as np
 import pandas as pd
@@ -6,7 +7,10 @@ from typing import Union, Tuple
 from sklearn.metrics import f1_score
 
 from tensorflow_model import TensorflowModel
-from utils import RANDOM_SEED, save_metrics_table, save_metrics_plot
+from utils import RANDOM_SEED
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from global_utils import save_metrics_table, save_metrics_plot
 
 
 def find_best_threshold(
@@ -68,12 +72,12 @@ if __name__ == "__main__":
     with open("results/metrics.json", "w") as f:
         json.dump(raport, f, indent=4)
 
-    # Save metrics table
-    print("💾 Saving metrics table...")
+    # Save evaluation metrics table
+    print("💾 Saving evaluation metrics table...")
     save_metrics_table(raport)
 
-    # Plot and save the evaluation metrics
-    print("📈 Plotting and 💾 saving the evaluation metrics...")
+    # Plot and save evaluation metrics graph
+    print("📈 Plotting and 💾 saving evaluation metrics graph...")
     save_metrics_plot(raport)
 
     print("✅ Model evaluation completed successfully!")
