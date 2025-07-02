@@ -476,12 +476,12 @@ if __name__ == "__main__":
             df = pd.read_csv(file)
             df = bronze_to_silver(df)
             df.to_csv("./1_silver/silver.csv", index=False)
-        print(Fore.GREEN + "✅ Transformation complete. Silver DataFrame saved." + Style.RESET_ALL)
+        print(Fore.GREEN + "✅ Transformation complete. 💾 Silver DataFrame saved." + Style.RESET_ALL)
     elif choice == "2":
         with open("./1_silver/silver.csv", "r") as file:
             df = pd.read_csv(file)
             df = silver_to_gold(df)
             df.to_csv("./2_gold/gold.csv", index=False)
-        print(Fore.GREEN + "✅ Transformation complete. Gold DataFrame saved." + Style.RESET_ALL)
+        print(Fore.GREEN + "✅ Transformation complete. 💾 Gold DataFrame saved." + Style.RESET_ALL)
     else:
         print(Fore.RED + "Invalid choice. Exiting." + Style.RESET_ALL)
