@@ -29,7 +29,7 @@ if __name__ == "__main__":
     def model_builder(hp):
         # Define the hyperparameters for the model
         config = {
-            "num_layers": hp.Int("num_layers", min_value=1, max_value=10, step=1),
+            "num_layers": hp.Int("num_layers", min_value=1, max_value=5, step=1),
             "activation": hp.Choice("activation", values=["relu", "elu", "tanh", "swish", "selu"]),
             "optimizer": hp.Choice("optimizer", values=["adam", "rmsprop", "sgd", "adamax", "nadam"]),
             "lr": hp.Float("lr", min_value=1e-5, max_value=1e-2, sampling="log"),
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         }
 
         # Define the hyperparameters (units and dropout) for each layer
-        for i in range(10):
+        for i in range(5):
             config[f"units_{i}"] = hp.Int(f"units_{i}", min_value=32, max_value=512, step=32)
             config[f"dropout_{i}"] = hp.Float(f"dropout_{i}", min_value=0.0, max_value=0.5, step=0.1)
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     tuner = MyTuner(
         model_builder,
         objective="val_binary_accuracy",
-        max_epochs=30,
+        max_epochs=20,
         factor=3,
         directory="kerastuner",
         project_name="death_risk_tuning",
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     )
 
     # Early stopping to prevent overfitting
-    stop_early = EarlyStopping(monitor="val_loss", patience=10, restore_best_weights=True)
+    stop_early = EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True)
 
     # Split trainval data into training and validation sets
     # Split 90% for training and 10% for validation
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         validation_data=(X_val.values, Y_val.values),
         callbacks=[stop_early],
         verbose=2,
-        epochs=30,
+        epochs=20,
     )
 
     print("✅ Hyperparameter tuning completed successfully!")
