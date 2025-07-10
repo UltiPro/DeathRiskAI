@@ -1,31 +1,30 @@
-import random
+import os
+import joblib
 import numpy as np
 import pandas as pd
+from typing import Optional, Union, Tuple, Dict
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
-from typing import Optional, Union, Tuple, Dict
-from sklearn.model_selection import GridSearchCV
-from imblearn.over_sampling import SMOTE
+
 
 class SklearnModel:
     def __init__(self, model_name: str, random_seed: int):
         """
-        Initializes the scikit-learn model with a given name and random seed.
+        Initializes the Sklearn model with a given name and random seed.
         """
-        self.model_name = model_name
+        super().__init__(model_name, random_seed)
         self.model = None
-        random.seed(random_seed)
-        np.random.seed(random_seed)
 
-    def build(self, config: Dict[str, Union[int, str]], input_dim: int) -> RandomForestClassifier:
+    def build(self, config: Dict[str, Union[int, str]]) -> RandomForestClassifier:
         """
-        Builds a RandomForestClassifier model based on the provided configuration.
+        Builds a Sklearn model based on the provided configuration.
         """
+
         # Helper function to get configuration values with defaults
         def get(key, default=None):
             return config.get(key, default)
 
-        # Create and return the RandomForestClassifier model
+        # Create a RandomForestClassifier model
         model = RandomForestClassifier(
             n_estimators=get("n_estimators", 100),
             max_depth=get("max_depth", None),
@@ -41,51 +40,42 @@ class SklearnModel:
         return model
 
     def train(
-        self,
-        X_train: pd.DataFrame,
-        Y_train: pd.Series,
-        X_val: pd.DataFrame,
-        Y_val: pd.Series,
-        **kwargs
+        self, X_train: pd.DataFrame, Y_train: pd.Series, class_weight: Dict[int, float] = {0: 1.0, 1: 1.0}
     ) -> None:
         """
-        Trains the scikit-learn model with the provided training data, validation data, and configuration parameters.
+        Trains the Sklearn model with the provided training data and configuration parameters.
         """
-        self.model.fit(X_train, Y_train)
+        self.model.fit(X_train, Y_train, sample_weight=class_weight)
 
     def predict(self, X: pd.DataFrame, threshold: Optional[float] = None) -> pd.Series:
         """
-        Predicts the class labels for the provided dataset.
+        Predicts the probabilities of the positive class for the provided dataset.
         If a threshold is provided, it returns binary predictions based on that threshold.
         """
-        probabilities = self.model.predict_proba(X)[:, 1]  # For binary classification, take class 1 probabilities
         if threshold is not None:
-            return pd.Series((probabilities >= threshold).astype(int))
-        return pd.Series(probabilities)
+            return pd.Series((self.model.predict_proba(X)[:, 1] >= threshold).astype(int))
+        return pd.Series(self.model.predict_proba(X)[:, 1])
 
     def evaluate(
-        self, X: pd.DataFrame, Y: pd.Series, threshold: Optional[float] = 0.5
+        self, X: pd.DataFrame, Y: pd.Series, threshold: float
     ) -> Tuple[Dict[str, Dict[str, float]], pd.Series]:
         """
-        Evaluates the model's performance on the provided dataset and returns a tuple containing a dictionary of
-        evaluation metrics and the predictions.
+        Evaluates the model's performance on the provided dataset and returns
+        a tuple containing a dictionary of evaluation metrics and the predictions.
         """
         predictions = self.predict(X, threshold)
-        report = classification_report(Y, predictions, output_dict=True)
-        return report, predictions
+        return classification_report(Y, predictions, output_dict=True), predictions
 
     def save(self, path: str) -> None:
         """
-        Saves the scikit-learn model to the specified path.
+        Saves the Sklearn model to the specified path.
         """
-        import joblib
         joblib.dump(self.model, path)
 
     def load(self, path: str) -> None:
         """
-        Loads a scikit-learn model from the specified path.
+        Loads a Sklearn model from the specified path.
         """
-        import joblib
         if not os.path.exists(path):
             raise FileNotFoundError(f"🛑 Model file not found at '{path}'.")
         self.model = joblib.load(path)
