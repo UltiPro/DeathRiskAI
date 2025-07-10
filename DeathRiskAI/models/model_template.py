@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 import pandas as pd
+from typing import Optional, Union, Tuple, List, Dict
 
 
 class ModelTemplate(ABC):
@@ -40,7 +41,7 @@ class ModelTemplate(ABC):
         raise NotImplementedError("This method should be overridden by subclasses.")
 
     @abstractmethod
-    def evaluate(self, data: pd.DataFrame) -> dict[str, float]:
+    def evaluate(self, X: pd.DataFrame, Y: pd.Series) -> Tuple[Dict[str, Dict[str, float]], pd.Series]:
         """
         Evaluates the model on the provided data and returns metrics such as accuracy, precision, recall, etc.
 

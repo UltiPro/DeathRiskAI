@@ -1,7 +1,5 @@
 import os
 import sys
-import random
-import numpy as np
 import pandas as pd
 from typing import Optional, Union, Tuple, List, Dict
 from sklearn.metrics import classification_report
@@ -17,11 +15,8 @@ class TensorflowModel(ModelTemplate):
         """
         Initializes the TensorFlow model with a given name and random seed.
         """
-        super().__init__(model_name)
+        super().__init__(model_name, random_seed)
         self.model = None
-        random.seed(random_seed)
-        np.random.seed(random_seed)
-        tf.random.set_seed(random_seed)
 
     def build(
         self, config: Union[Dict[str, float | int | str], HyperParameters], input_dim: int
@@ -91,10 +86,10 @@ class TensorflowModel(ModelTemplate):
         Y_train: pd.Series,
         X_val: pd.DataFrame,
         Y_val: pd.Series,
-        epochs: int = 100,
+        epochs: int,
         batch_size: int = 64,
-        callbacks: Optional[List[tf.keras.callbacks.Callback]] = [],
-        class_weight: Optional[Dict[int, float]] = {1: 1.0, 0: 1.0},
+        callbacks: List[tf.keras.callbacks.Callback] = [],
+        class_weight: Dict[int, float] = {0: 1.0, 1: 1.0},
     ) -> tf.keras.callbacks.History:
         """
         Trains the TensorFlow model with the provided training data, validation data and configuration parameters.
@@ -122,7 +117,7 @@ class TensorflowModel(ModelTemplate):
         return pd.Series(self.model.predict(X).flatten())
 
     def evaluate(
-        self, X: pd.DataFrame, Y: pd.Series, threshold: Optional[float] = 0.5
+        self, X: pd.DataFrame, Y: pd.Series, threshold: float
     ) -> Tuple[Dict[str, Dict[str, float]], pd.Series]:
         """
         Evaluates the model's performance on the provided dataset and returns
@@ -135,6 +130,8 @@ class TensorflowModel(ModelTemplate):
         """
         Saves the TensorFlow model to the specified path.
         """
+        if not os.path.exists(os.path.dirname(path)):
+            raise FileNotFoundError(f"🛑 Directory does not exist for saving model at '{path}'.")
         self.model.save(path)
 
     def load(self, path: str) -> None:

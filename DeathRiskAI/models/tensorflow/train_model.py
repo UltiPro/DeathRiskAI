@@ -61,7 +61,7 @@ if __name__ == "__main__":
         callbacks=[stop_early, checkpoint],
         # Smote has already balanced the classes
         # Change class weights only if necessary
-        class_weight={0: 1.0, 1: 1.0},
+        # class_weight={0: 1.0, 1: 1.0},
     )
 
     print("✅ Final model trained successfully!")
