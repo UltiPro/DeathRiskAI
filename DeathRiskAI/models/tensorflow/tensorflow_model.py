@@ -48,23 +48,23 @@ class TensorflowModel(ModelTemplate):
         def get_float(key, default=None):
             return float(get(key, default))
 
-        # Create a sequential model
-        model = tf.keras.Sequential()
+        # Create a Sequential model
+        self.model = tf.keras.Sequential()
 
         # Add an input layer with the specified input dimension
-        model.add(tf.keras.layers.Input(shape=(input_dim,)))
+        self.model.add(tf.keras.layers.Input(shape=(input_dim,)))
 
         # Add hidden layers based on the configuration
         activation = get("activation", "relu")
         for i in range(get_int("num_layers", 1)):
-            model.add(tf.keras.layers.Dense(units=get_int(f"units_{i}", 64), activation=activation))
-            model.add(tf.keras.layers.Dropout(rate=get_float(f"dropout_{i}", 0.0)))
+            self.model.add(tf.keras.layers.Dense(units=get_int(f"units_{i}", 64), activation=activation))
+            self.model.add(tf.keras.layers.Dropout(rate=get_float(f"dropout_{i}", 0.0)))
 
         # Add the output layer
-        model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
+        self.model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
 
         # Compile the model with the specified optimizer, loss function and metrics
-        model.compile(
+        self.model.compile(
             optimizer=optimizers.get(get("optimizer", "adam"))(learning_rate=get_float("lr", 0.001)),
             loss="binary_crossentropy",
             metrics=[
@@ -75,10 +75,7 @@ class TensorflowModel(ModelTemplate):
             ],
         )
 
-        # Store the model in the instance variable
-        self.model = model
-
-        return model
+        return self.model
 
     def train(
         self,
