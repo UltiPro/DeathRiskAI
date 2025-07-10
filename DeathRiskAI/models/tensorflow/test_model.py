@@ -80,4 +80,4 @@ if __name__ == "__main__":
     print("📈 Plotting and 💾 saving evaluation metrics graph...")
     save_metrics_plot(raport)
 
-    print("✅ Model evaluation completed successfully!")
+    print("✅ Model evaluation pipeline completed successfully!")
