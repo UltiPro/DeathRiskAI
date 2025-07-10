@@ -24,8 +24,8 @@ class SklearnModel:
         def get(key, default=None):
             return config.get(key, default)
 
-        # Create a RandomForestClassifier model
-        model = RandomForestClassifier(
+        # Create a RandomForestClassifier model with provided hyperparameters
+        self.model = RandomForestClassifier(
             n_estimators=get("n_estimators", 100),
             max_depth=get("max_depth", None),
             min_samples_split=get("min_samples_split", 2),
@@ -34,10 +34,7 @@ class SklearnModel:
             random_state=np.random.seed(),
         )
 
-        # Store the model in the instance variable
-        self.model = model
-
-        return model
+        return self.model
 
     def train(
         self, X_train: pd.DataFrame, Y_train: pd.Series, class_weight: Dict[int, float] = {0: 1.0, 1: 1.0}
