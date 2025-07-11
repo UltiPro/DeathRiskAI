@@ -1,5 +1,6 @@
 import os
 import joblib
+import json
 import matplotlib.pyplot as plt
 
 from feature_transformation import RANDOM_SEED as RND_SEED
@@ -49,3 +50,33 @@ def save_training_metrics(training_metrics, name="model"):
     """
     training_metrics.to_csv(f"results/{name}_training_metrics.csv", index=False)
     print(f"💾 Training metrics saved to results/{name}_training_metrics.csv")
+
+def save_grid_search_results(grid_search: GridSearchCV, path: str = "results/grid_search_results.json") -> None:
+    """
+    Saves the results of GridSearchCV, including the best parameters, best score, and all results, to a JSON file.
+    
+    :param grid_search: The fitted GridSearchCV object.
+    :param path: The file path to save the results.
+    """
+    # Create the results directory if it doesn't exist
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    
+    # Extract the best parameters and best score
+    best_params = grid_search.best_params_
+    best_score = grid_search.best_score_
+
+    # Extract the full results (including all parameter combinations and their scores)
+    results = grid_search.cv_results_
+
+    # Prepare the data to save (best parameters, best score, and detailed results)
+    data_to_save = {
+        "best_params": best_params,
+        "best_score": best_score,
+        "results": results
+    }
+    
+    # Save the results to a JSON file
+    with open(path, "w") as f:
+        json.dump(data_to_save, f, indent=4)
+
+    print(f"✅ GridSearchCV results saved to {path}")
