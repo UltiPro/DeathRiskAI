@@ -2,15 +2,16 @@ import os
 import json
 import pandas as pd
 from sklearn.model_selection import GridSearchCV
-from utils import save_grid_search_results
+
 from scikit_model import SklearnModel
+from utils import RANDOM_SEED, save_grid_search_results
 
 if __name__ == "__main__":
     # Ensure the results directory exists
     os.makedirs("results", exist_ok=True)
 
     # Initialize the Sklearn model
-    sklearnModel = SklearnModel(model_name="random_forest_model", random_seed=42)
+    sklearnModel = SklearnModel(model_name="random_forest_model", random_seed=RANDOM_SEED)
 
     # Configure GridSearchCV for hyperparameter tuning
     grid_search = GridSearchCV(
