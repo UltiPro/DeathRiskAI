@@ -1,87 +1,105 @@
 import os
+import json
 import pandas as pd
 import keras_tuner as kt
-import tensorflow as tf
-from tensorflow_model import TensorflowModel
+from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import EarlyStopping
-from plot_utils import plot_training_history, plot_tuner_results
-import json
 from imblearn.over_sampling import SMOTE
 
+from tensorflow_model import TensorflowModel
+from utils import RANDOM_SEED, save_tuner_results
+
+
+class MyTuner(kt.Hyperband):
+    def run_trial(self, trial, *args, **kwargs):
+        kwargs["batch_size"] = trial.hyperparameters.values.get("batch_size", 64)
+        return super().run_trial(trial, *args, **kwargs)
+
+
 if __name__ == "__main__":
-    # Load the entire trainval data for tuning
-    X_train = pd.read_parquet("./../trainval_test_data/X_trainval.parquet")
-    Y_train = pd.read_parquet("./../trainval_test_data/Y_trainval.parquet").squeeze()
+    # Ensure the results directory exists
+    os.makedirs("results", exist_ok=True)
 
-    input_dim = X_train.shape[1]
+    # Load trainval data for hyperparameter tuning
+    print("🔄 Loading trainval data for hyperparameter tuning...")
+    X_trainval = pd.read_parquet("./../trainval_test_data/X_trainval.parquet")
+    Y_trainval = pd.read_parquet("./../trainval_test_data/Y_trainval.parquet").squeeze()
 
+    # Define the model builder function for Keras Tuner
     def model_builder(hp):
-        model_wrapper = TensorflowModel(model_name="tuned_model")
-        return model_wrapper.build_model_with_hp(hp, input_dim=input_dim)
+        # Define the hyperparameters for the model
+        config = {
+            "num_layers": hp.Int("num_layers", min_value=1, max_value=16, step=1),
+            "activation": hp.Choice("activation", values=["relu", "elu", "tanh", "swish", "selu"]),
+            "optimizer": hp.Choice("optimizer", values=["adam", "rmsprop", "sgd", "adamax", "nadam"]),
+            "lr": hp.Float("lr", min_value=1e-5, max_value=1e-2, sampling="log"),
+            "batch_size": hp.Choice("batch_size", values=[32, 64, 128, 256, 512]),
+        }
 
-    tuner = kt.Hyperband(
+        # Define the hyperparameters (units and dropout) for each layer
+        for i in range(config["num_layers"]):
+            config[f"units_{i}"] = hp.Int(f"units_{i}", min_value=32, max_value=512, step=32)
+            config[f"dropout_{i}"] = hp.Float(f"dropout_{i}", min_value=0.0, max_value=0.5, step=0.05)
+
+        # Create and return the TensorFlow model using provided configurations
+        return TensorflowModel(model_name="tuned_model", random_seed=RANDOM_SEED).build(
+            config=config,
+            input_dim=X_trainval.shape[1],
+        )
+
+    # Initialize the Keras Tuner with Hyperband
+    tuner = MyTuner(
         model_builder,
-        objective="val_accuracy",
-        max_epochs=20,
+        objective="val_binary_accuracy",
+        max_epochs=30,
         factor=3,
         directory="kerastuner",
         project_name="death_risk_tuning",
         overwrite=True,
     )
 
-    stop_early = EarlyStopping(monitor="val_loss", patience=5)
+    # Early stopping to prevent overfitting
+    stop_early = EarlyStopping(monitor="val_loss", patience=10, restore_best_weights=True)
 
-    # We split trainval (90%) again just for tuning val data (10% z tego)
-    X_tune_train, X_tune_val = (
-        X_train.iloc[: -int(0.1 * len(X_train))],
-        X_train.iloc[-int(0.1 * len(X_train)) :],
-    )
-    Y_tune_train, Y_tune_val = (
-        Y_train.iloc[: -int(0.1 * len(Y_train))],
-        Y_train.iloc[-int(0.1 * len(Y_train)) :],
+    # Split trainval data into training and validation sets
+    # Split 90% for training and 10% for validation
+    print("🔄 Splitting trainval data into training and validation sets...")
+    X_train, X_val, Y_train, Y_val = train_test_split(
+        X_trainval, Y_trainval, test_size=0.1, stratify=Y_trainval, random_state=RANDOM_SEED
     )
 
-    # Apply SMOTE to training part only (not validation)
-    print("🔄 Applying SMOTE to tuning training data...")
-    smote = SMOTE(random_state=42)
-    X_tune_train_res, Y_tune_train_res = smote.fit_resample(X_tune_train, Y_tune_train)
+    # Apply SMOTE oversampling to the training set only
+    print("🔄 Applying SMOTE oversampling to the training set only...")
+    smote = SMOTE(random_state=RANDOM_SEED)
+    X_tune_train, Y_tune_train = smote.fit_resample(X_train, Y_train)
 
+    # Start hyperparameter tuning
+    print("🔄 Starting hyperparameter tuning...")
     tuner.search(
-        X_tune_train_res,
-        Y_tune_train_res,
-        validation_data=(X_tune_val.values, Y_tune_val.values),
+        X_tune_train.values,
+        Y_tune_train.values,
+        validation_data=(X_val.values, Y_val.values),
         callbacks=[stop_early],
-        batch_size=32,
         verbose=2,
-        epochs=20,
+        epochs=30,
     )
 
-    plot_tuner_results(tuner)
+    print("✅ Hyperparameter tuning completed successfully!")
 
+    # Get the best hyperparameters
     best_hp = tuner.get_best_hyperparameters(num_trials=1)[0]
-    print("\nNajlepsze hiperparametry:")
+
+    print("✅ Best hyperparameters:")
     for param, value in best_hp.values.items():
         print(f"{param}: {value}")
 
-    # Save best hyperparameters for later use
-    os.makedirs("results", exist_ok=True)
+    # Save tuner results
+    print("💾 Saving tuner results...")
+    save_tuner_results(tuner)
+
+    # Save the best hyperparameters
+    print("💾 Saving the best hyperparameters...")
     with open("results/best_hp.json", "w") as f:
         json.dump(best_hp.values, f, indent=4)
 
-    # Build the best model and train it fully
-    model = tuner.hypermodel.build(best_hp)
-    history = model.fit(
-        X_train.values,
-        Y_train.values,
-        validation_data=(X_tune_val.values, Y_tune_val.values),
-        epochs=20,
-        batch_size=32,
-        callbacks=[stop_early],
-        verbose=2,
-    )
-
-    plot_training_history(history, name="tuned_model")
-
-    # Save best model
-    os.makedirs("models", exist_ok=True)
-    model.save("models/tuned_model.keras")
+    print("✅ Hyperparameter tuning pipeline completed successfully!")

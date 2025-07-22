@@ -25,31 +25,22 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
     input_rows_len = len(df)
 
     # Calculate missing values depending on other columns
-    print(
-        "\nTransforming DataFrame - Calculate missing values depending on other columns..."
-    )
+    print("🔄 Transforming DataFrame - Calculate missing values depending on other columns...")
 
     # If bmi is missing, calculate it using the formula: weight / (height / 100) ** 2
-    print("Calculate BMI if missing...")
+    print("➡️  Calculate BMI if missing...")
     df["bmi"] = df.apply(
         lambda row: (
             row["weight"] / ((row["height"] / 100) ** 2)
-            if pd.isnull(row["bmi"])
-            and not pd.isnull(row["weight"])
-            and not pd.isnull(row["height"])
+            if pd.isnull(row["bmi"]) and not pd.isnull(row["weight"]) and not pd.isnull(row["height"])
             else row["bmi"]
         ),
         axis=1,
     )
 
     # Drop unnecessary columns
-    print("Transforming DataFrame - Drop unnecessary columns...")
-    print(
-        "Number of columns before dropping: "
-        + Fore.RED
-        + str(input_columns_len)
-        + Style.RESET_ALL
-    )
+    print("🔄 Transforming DataFrame - Drop unnecessary columns...")
+    print("➡️  Number of columns before dropping: " + Fore.RED + str(input_columns_len) + Style.RESET_ALL)
 
     # "???" means that the column is not used in the model but may be useful for future analysis
     df = df.drop(
@@ -112,28 +103,18 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
         ]
     )
 
-    print(
-        "Number of columns after dropping: "
-        + Fore.RED
-        + str(len(df.columns))
-        + Style.RESET_ALL
-    )
+    print("➡️  Number of columns after dropping: " + Fore.RED + str(len(df.columns)) + Style.RESET_ALL)
 
     # Drop rows with missing values in key columns
-    print("Transforming DataFrame - Drop rows with missing values in key columns...")
-    print(
-        "Number of rows before dropping: "
-        + Fore.RED
-        + str(input_rows_len)
-        + Style.RESET_ALL
-    )
+    print("🔄 Transforming DataFrame - Drop rows with missing values in key columns...")
+    print("➡️  Number of rows before dropping: " + Fore.RED + str(input_rows_len) + Style.RESET_ALL)
 
     df = df.dropna(subset=["gender", "age", "bmi"]).copy()
 
-    print("Number of rows after dropping: " + Fore.RED + str(len(df)) + Style.RESET_ALL)
+    print("➡️  Number of rows after dropping: " + Fore.RED + str(len(df)) + Style.RESET_ALL)
 
     # Rename columns for consistency
-    print("Transforming DataFrame - Rename columns for consistency...")
+    print("🔄 Transforming DataFrame - Rename columns for consistency...")
 
     columns_to_rename = {
         "hospital_death": "death",
@@ -158,15 +139,10 @@ def bronze_to_silver(df: pd.DataFrame) -> pd.DataFrame:
     }
     df = df.rename(columns=columns_to_rename)
 
-    print(
-        "Number of renamed columns: "
-        + Fore.RED
-        + str(len(columns_to_rename))
-        + Style.RESET_ALL
-    )
+    print("➡️  Number of renamed columns: " + Fore.RED + str(len(columns_to_rename)) + Style.RESET_ALL)
 
     # Reorder columns to match the desired output
-    print("Transforming DataFrame - Reorder columns to match the desired output...")
+    print("🔄 Transforming DataFrame - Reorder columns to match the desired output...")
 
     df = df[
         [
@@ -326,10 +302,10 @@ def silver_to_gold(df: pd.DataFrame) -> pd.DataFrame:
     """
 
     # Fill missing values in specific columns
-    print("Transforming DataFrame - Fill missing values in specific columns...")
+    print("🔄 Transforming DataFrame - Fill missing values in specific columns...")
 
     # With 0
-    print("Filling missing values with 0...")
+    print("➡️  Filling missing values with 0...")
     columns_to_fill = [
         "aids",
         "cirrhosis",
@@ -345,7 +321,7 @@ def silver_to_gold(df: pd.DataFrame) -> pd.DataFrame:
     df[columns_to_fill] = df[columns_to_fill].fillna(0)
 
     # With mean
-    print("Filling missing values with mean of top 10 values...")
+    print("➡️  Filling missing values with mean of top 10 values...")
     columns_to_fill_mean = [
         "albumin",
         "h1_albumin_min",
@@ -471,49 +447,41 @@ def silver_to_gold(df: pd.DataFrame) -> pd.DataFrame:
 
     # Normalize floating-point numerical columns
     # Round floating-point numerical columns to 2 decimal places
-    print("Transforming DataFrame - Normalize floating-point numerical columns...")
+    print("🔄 Transforming DataFrame - Normalize floating-point numerical columns...")
     float_columns = df.select_dtypes(include=["float64"]).columns
     for column in float_columns:
         df[column] = df[column].round(2)
 
     # Encode categorical columns
-    print("Transforming DataFrame - Encode categorical columns...")
+    print("🔄 Transforming DataFrame - Encode categorical columns...")
     categorical_columns = df.select_dtypes(include=["object"]).columns
     for column in categorical_columns:
         if column == "gender":
-            print("Encoding gender column...")
+            print("➡️  Encoding gender column...")
             df[column] = df[column].map({"M": 0, "F": 1})
         else:
-            print(f"Encoding {str(column)} column...")
+            print(f"➡️  Encoding {str(column)} column...")
             df[column] = df[column].astype("category").cat.codes
 
     return df
 
 
 if __name__ == "__main__":
-    print("Choose a transformation:")
-    print("1. Bronze to Silver")
-    print("2. Silver to Gold")
+    print("❓ Choose a transformation:")
+    print("1️⃣  Bronze to Silver")
+    print("2️⃣  Silver to Gold")
     choice = input("Enter your choice (1 or 2): ")
     if choice == "1":
         with open("./0_bronze/bronze.csv", "r") as file:
             df = pd.read_csv(file)
             df = bronze_to_silver(df)
             df.to_csv("./1_silver/silver.csv", index=False)
-        print(
-            Fore.GREEN
-            + "Transformation complete. Silver DataFrame saved."
-            + Style.RESET_ALL
-        )
+        print(Fore.GREEN + "✅ Transformation complete. 💾 Silver DataFrame saved." + Style.RESET_ALL)
     elif choice == "2":
         with open("./1_silver/silver.csv", "r") as file:
             df = pd.read_csv(file)
             df = silver_to_gold(df)
             df.to_csv("./2_gold/gold.csv", index=False)
-        print(
-            Fore.GREEN
-            + "Transformation complete. Gold DataFrame saved."
-            + Style.RESET_ALL
-        )
+        print(Fore.GREEN + "✅ Transformation complete. 💾 Gold DataFrame saved." + Style.RESET_ALL)
     else:
         print(Fore.RED + "Invalid choice. Exiting." + Style.RESET_ALL)
