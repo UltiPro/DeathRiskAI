@@ -1,26 +1,10 @@
 import os
-import sys
 import json
-import numpy as np
 import pandas as pd
-from typing import Union, Tuple
-from sklearn.metrics import f1_score
 
 from tensorflow_model import TensorflowModel
+from global_utils import find_best_threshold, save_metrics_table, save_metrics_plot
 from utils import RANDOM_SEED
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from global_utils import save_metrics_table, save_metrics_plot
-
-
-def find_best_threshold(
-    Y: Union[np.ndarray, pd.Series], Y_probabilities: Union[np.ndarray, pd.Series]
-) -> Tuple[float, float]:
-    thresholds = np.arange(0.0, 1.01, 0.0001)
-    f1_scores = [f1_score(Y, Y_probabilities >= t) for t in thresholds]
-    idx = np.argmax(f1_scores)
-    return float(thresholds[idx]), float(f1_scores[idx])
-
 
 if __name__ == "__main__":
     # Ensure the results directory exists

@@ -1,1 +1,7 @@
 /tensorflow/kerastuner/*
+/tensorflow/models/*
+/tensorflow/results/*
+/tensorflow/visualizations/*
+/scikit-learn/models/*
+/scikit-learn/results/*
+/scikit-learn/visualizations/*
