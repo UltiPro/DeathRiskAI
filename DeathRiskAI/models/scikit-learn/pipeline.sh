@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export TF_ENABLE_ONEDNN_OPTS=0
+
 echo "=============================================="
 echo "  Step 1: Tuning hyperparameters              "
 echo "=============================================="

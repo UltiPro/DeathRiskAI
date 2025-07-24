@@ -1,4 +1,5 @@
 import os
+import sys
 import joblib
 import numpy as np
 import pandas as pd
@@ -6,8 +7,11 @@ from typing import Optional, Union, Tuple, Dict
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from model_template import ModelTemplate
 
-class SklearnModel:
+
+class SklearnModel(ModelTemplate):
     def __init__(self, model_name: str, random_seed: int):
         """
         Initializes the Sklearn model with a given name and random seed.

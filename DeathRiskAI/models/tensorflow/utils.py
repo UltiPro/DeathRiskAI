@@ -45,17 +45,20 @@ def save_model_visualization(model: tf.keras.Model, name: str = "model") -> None
     # Ensure the visualizations directory exists
     os.makedirs("visualizations", exist_ok=True)
 
-    # Plot the model structure and save it to a file
-    plot_model(
-        model,
-        to_file=f"visualizations/{name}_structure.png",
-        show_shapes=True,
-        show_layer_names=True,
-        show_layer_activations=True,
-        expand_nested=True,
-        rankdir="TB",
-        dpi=300,
-    )
+    try:
+        # Plot the model structure and save it to a file
+        plot_model(
+            model,
+            to_file=f"visualizations/{name}_structure.png",
+            show_shapes=True,
+            show_layer_names=True,
+            show_layer_activations=True,
+            expand_nested=True,
+            rankdir="TB",
+            dpi=300,
+        )
+    except:
+        print("🛑 ImportError: You must install graphviz for visualizations.")
 
 
 def save_training_history(history: tf.keras.callbacks.History, name: str = "model") -> None:
