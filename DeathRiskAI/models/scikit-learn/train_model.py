@@ -7,6 +7,7 @@ from imblearn.over_sampling import SMOTE
 from scikit_model import SklearnModel
 from utils import RANDOM_SEED, save_feature_importance
 
+
 if __name__ == "__main__":
     # Ensure the models directory exists
     os.makedirs("models", exist_ok=True)

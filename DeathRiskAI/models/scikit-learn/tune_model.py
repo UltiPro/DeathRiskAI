@@ -6,6 +6,7 @@ from sklearn.model_selection import GridSearchCV
 from scikit_model import SklearnModel
 from utils import RANDOM_SEED, save_grid_search_results
 
+
 if __name__ == "__main__":
     # Ensure the results directory exists
     os.makedirs("results", exist_ok=True)
