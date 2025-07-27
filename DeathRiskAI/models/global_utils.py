@@ -12,7 +12,7 @@ def find_best_threshold(
     Finds the best threshold for binary classification based on F1-score.
     """
     thresholds = np.arange(0.0, 1.01, 0.0001)
-    f1_scores = [f1_score(Y, Y_probabilities >= t) for t in thresholds]
+    f1_scores = [f1_score(Y, Y_probabilities >= t, average="macro") for t in thresholds]
     idx = np.argmax(f1_scores)
     return float(thresholds[idx]), float(f1_scores[idx])
 
