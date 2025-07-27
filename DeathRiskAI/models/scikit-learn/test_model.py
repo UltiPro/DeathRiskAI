@@ -6,6 +6,7 @@ from scikit_model import SklearnModel
 from global_utils import find_best_threshold, save_metrics_table, save_metrics_plot
 from utils import RANDOM_SEED
 
+
 if __name__ == "__main__":
     # Ensure the results directory exists
     os.makedirs("results", exist_ok=True)

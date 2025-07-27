@@ -1,92 +1,69 @@
 import random
 import numpy as np
-from abc import ABC, abstractmethod
 import pandas as pd
-from typing import Optional, Union
-
+from abc import ABC, abstractmethod
+from typing import Optional, Union, Tuple, Dict
 import tensorflow as tf
+
+from feature_transformation import RANDOM_SEED
 
 
 class ModelTemplate(ABC):
     """
     Base class for all models (TensorFlow, scikit-learn, etc.).
-    This class provides a template for model training, prediction, evaluation, and saving/loading models.
+    This class provides a template for model building, training, prediction, evaluation, and saving/loading models.
     """
 
-    def __init__(self, model_name: str, random_seed: int = 42):
+    def __init__(self, model_name: str, random_seed: int = RANDOM_SEED):
         """
-        Initializes the model with a given name and random seed.
-
-        :param model_name: Name of the model.
+        Initializes a model using the provided name and random seed.
         """
-        self.model_name = model_name
-        self.model: Optional[object] = None  # Placeholder for the actual model instance
+        self.model_name: str = model_name
+        self.model: Optional[object] = None  # Placeholder for a model object
         random.seed(random_seed)
         np.random.seed(random_seed)
         tf.random.set_seed(random_seed)
 
     @abstractmethod
-    def build(self, config: Union[dict, object], input_dim: int) -> object:
+    def build(self, config: Union[dict, object], **kwargs) -> object:
         """
-        Builds the model based on the provided configuration.
-
-        :param config: Hyperparameter configuration or similar parameters.
-        :param input_dim: Number of features in the input data.
-        :return: A built model (e.g., RandomForestClassifier, Keras model, etc.).
+        Builds a model based on the provided configuration.
         """
-        pass
+        raise NotImplementedError("Build method is not implemented for this model.")
 
     @abstractmethod
-    def train(
-        self, X_train: pd.DataFrame, Y_train: pd.Series, X_val: pd.DataFrame, Y_val: pd.Series, **kwargs
-    ) -> None:
+    def train(self, X_train: pd.DataFrame, Y_train: pd.Series, **kwargs) -> None:
         """
-        Trains the model using the provided data.
-
-        :param X_train: Training features.
-        :param Y_train: Training target variable.
-        :param X_val: Validation features.
-        :param Y_val: Validation target variable.
+        Trains a model using the provided dataset.
         """
-        pass
+        raise NotImplementedError("Train method is not implemented for this model.")
 
     @abstractmethod
     def predict(self, X: pd.DataFrame, threshold: Optional[float] = None) -> pd.Series:
         """
-        Makes predictions using the trained model.
-
-        :param X: Features to make predictions on.
-        :param threshold: Optional threshold to convert probabilities to binary predictions.
-        :return: Predictions (either probabilities or binary predictions).
+        Makes predictions using a model on the provided dataset.
         """
-        pass
+        raise NotImplementedError("Predict method is not implemented for this model.")
 
     @abstractmethod
-    def evaluate(self, X: pd.DataFrame, Y: pd.Series, threshold: float) -> Union[dict, pd.Series]:
+    def evaluate(
+        self, X: pd.DataFrame, Y: pd.Series, threshold: float
+    ) -> Tuple[Dict[str, Dict[str, float]], pd.Series]:
         """
-        Evaluates the model's performance on the provided dataset.
-
-        :param X: Features for evaluation.
-        :param Y: Actual target variable.
-        :param threshold: Threshold for binary classification.
-        :return: Evaluation metrics and predictions.
+        Evaluates a model's performance on the provided dataset.
         """
-        pass
+        raise NotImplementedError("Evaluate method is not implemented for this model.")
 
     @abstractmethod
     def save(self, path: str) -> None:
         """
-        Saves the trained model to the specified path.
-
-        :param path: Path to save the model.
+        Saves a model to the specified path.
         """
-        pass
+        raise NotImplementedError("Save method is not implemented for this model.")
 
     @abstractmethod
     def load(self, path: str) -> None:
         """
-        Loads the model from the specified path.
-
-        :param path: Path to load the model.
+        Loads a model from the specified path.
         """
-        pass
+        raise NotImplementedError("Load method is not implemented for this model.")

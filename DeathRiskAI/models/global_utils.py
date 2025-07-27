@@ -1,12 +1,27 @@
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from typing import Union, Tuple
+from sklearn.metrics import f1_score
+
+
+def find_best_threshold(
+    Y: Union[np.ndarray, pd.Series], Y_probabilities: Union[np.ndarray, pd.Series]
+) -> Tuple[float, float]:
+    """
+    Finds the best threshold for binary classification based on F1-score.
+    """
+    thresholds = np.arange(0.0, 1.01, 0.0001)
+    f1_scores = [f1_score(Y, Y_probabilities >= t) for t in thresholds]
+    idx = np.argmax(f1_scores)
+    return float(thresholds[idx]), float(f1_scores[idx])
 
 
 def save_metrics_table(report: dict) -> None:
     """
     Saves a pretty table of classification metrics to a text file.
     """
-    with open("results/metrics_table.txt", "w", encoding="utf-8") as f:
+    with open("results/metrics.txt", "w", encoding="utf-8") as f:
         f.write("📊 Classification Report\n\n")
         f.write(
             "{:<15} {:<10} {:<10} {:<10} {:<10}\n".format(
