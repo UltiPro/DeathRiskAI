@@ -1,10 +1,10 @@
 import os
 import json
 import pandas as pd
-import keras_tuner as kt
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.callbacks import EarlyStopping
 from imblearn.over_sampling import SMOTE
+import keras_tuner as kt
+from tensorflow.keras.callbacks import EarlyStopping
 
 from tensorflow_model import TensorflowModel
 from utils import RANDOM_SEED, save_tuner_results

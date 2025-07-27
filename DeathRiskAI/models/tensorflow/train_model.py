@@ -2,11 +2,12 @@ import os
 import json
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from imblearn.over_sampling import SMOTE
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
 from tensorflow_model import TensorflowModel
 from utils import RANDOM_SEED, save_model_visualization, save_training_history
+
 
 if __name__ == "__main__":
     # Ensure the models directory exists
