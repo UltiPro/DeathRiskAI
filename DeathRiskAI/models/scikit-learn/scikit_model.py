@@ -46,7 +46,7 @@ class SklearnModel(ModelTemplate):
         """
         Trains the Sklearn model with the provided training data and configuration parameters.
         """
-        self.model.fit(X_train, Y_train, sample_weight=class_weight)
+        self.model.fit(X_train, Y_train, sample_weight=Y_train.map(class_weight))
 
     def predict(self, X: pd.DataFrame, threshold: Optional[float] = None) -> pd.Series:
         """
