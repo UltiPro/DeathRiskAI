@@ -5,19 +5,17 @@ desc
 
 # Dependencies and Usage
 
-## Dependencies
+### Dependencies
 
 > cd "./DeathRiskAI/"
 
 > cat requirements.txt
 
-## Installation
+### Installation
 
 > cd "./DeathRiskAI/"
 
 > pip install -r requirements.txt
-
-## Using the app
 
 ### Data processing
 
