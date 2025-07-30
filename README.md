@@ -5,13 +5,15 @@ desc
 
 # Dependencies and Usage
 
-## Dependencies:
+## Dependencies
 
-> /DeathRiskAI/requirements.txt
+> cd "./DeathRiskAI/"
 
-## Installation:
+> cat requirements.txt
 
-> cd "/DeathRiskAI"
+## Installation
+
+> cd "./DeathRiskAI/"
 
 > pip install -r requirements.txt
 
@@ -19,24 +21,24 @@ desc
 
 ### Data processing
 
-> cd "/DeathRiskAI/data"
+> cd "./DeathRiskAI/data/"
 
 > python preprocessing.py
 
 ### Feature transformation
 
-> cd "/DeathRiskAI/models"
+> cd "./DeathRiskAI/models/"
 
 > python feature_transformation.py
 
 ### Scikit Learn model pipeline
 
-> cd "/DeathRiskAI/models/scikit-learn"
+> cd "./DeathRiskAI/models/scikit-learn/"
 
 > ./pipeline.sh
 
 ### Tensorflow model pipeline
 
-> cd "/DeathRiskAI/models/tensorflow"
+> cd "./DeathRiskAI/models/tensorflow/"
 
 > ./pipeline.sh
