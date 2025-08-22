@@ -57,7 +57,16 @@ class TensorflowModel(ModelTemplate):
         # Add hidden layers based on the configuration
         activation = get("activation", "relu")
         for i in range(get_int("num_layers", 1)):
-            self.model.add(tf.keras.layers.Dense(units=get_int(f"units_{i}", 64), activation=activation))
+            self.model.add(
+                tf.keras.layers.Dense(
+                    units=get_int(f"units_{i}", 64),
+                    activation=activation,
+                    kernel_regularizer=tf.keras.regularizers.l2(get_float("l2_regularization", 0.01)),
+                )
+            )
+            # Add batch normalization if enabled
+            if get("batch_norm", False):
+                self.model.add(tf.keras.layers.BatchNormalization())
             self.model.add(tf.keras.layers.Dropout(rate=get_float(f"dropout_{i}", 0.0)))
 
         # Add the output layer
@@ -65,7 +74,14 @@ class TensorflowModel(ModelTemplate):
 
         # Compile the model with the specified optimizer, loss function and metrics
         self.model.compile(
-            optimizer=optimizers.get(get("optimizer", "adam"))(learning_rate=get_float("lr", 0.001)),
+            optimizer=optimizers.get(get("optimizer", "adam"))(
+                learning_rate=tf.keras.optimizers.schedules.ExponentialDecay(
+                    initial_learning_rate=get_float("lr", 0.001),
+                    decay_steps=100000,
+                    decay_rate=get_float("lr_decay_rate", 0.96),
+                    staircase=True,
+                ),
+            ),
             loss="binary_crossentropy",
             metrics=[
                 tf.keras.metrics.BinaryAccuracy(),

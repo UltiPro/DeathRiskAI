@@ -33,7 +33,10 @@ if __name__ == "__main__":
             "activation": hp.Choice("activation", values=["relu", "elu", "tanh", "swish", "selu"]),
             "optimizer": hp.Choice("optimizer", values=["adam", "rmsprop", "sgd", "adamax", "nadam"]),
             "lr": hp.Float("lr", min_value=1e-5, max_value=1e-2, sampling="log"),
+            "lr_decay_rate": hp.Float("lr_decay_rate", min_value=0.9, max_value=1.0, step=0.01),
             "batch_size": hp.Choice("batch_size", values=[32, 64, 128, 256, 512]),
+            "l2_regularization": hp.Float("l2_regularization", min_value=0.0, max_value=0.1, step=0.001),
+            "batch_norm": hp.Boolean("batch_norm"),
         }
 
         # Define the hyperparameters (units and dropout) for each layer
